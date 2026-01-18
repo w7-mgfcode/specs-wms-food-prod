@@ -31,7 +31,7 @@ async def create_lot(
         operator_id=lot_data.operator_id,
         weight_kg=lot_data.weight_kg,
         temperature_c=lot_data.temperature_c,
-        metadata=lot_data.metadata or {},
+        metadata_=lot_data.metadata or {},
     )
 
     db.add(lot)

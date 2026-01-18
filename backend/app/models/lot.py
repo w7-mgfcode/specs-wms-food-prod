@@ -7,10 +7,9 @@ from typing import TYPE_CHECKING, Any, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import DateTime, Enum, ForeignKey, Numeric, String
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base
+from app.database import Base, JSONB_TYPE, UUID_TYPE
 
 if TYPE_CHECKING:
     from app.models.production import Phase, ProductionRun
@@ -39,21 +38,25 @@ class Lot(Base):
 
     __tablename__ = "lots"
 
-    id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(UUID_TYPE, primary_key=True, default=uuid4)
     lot_code: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     lot_type: Mapped[Optional[LotType]] = mapped_column(
         Enum(LotType, name="lot_type", create_constraint=False), nullable=True
     )
     production_run_id: Mapped[Optional[UUID]] = mapped_column(
-        ForeignKey("production_runs.id"), nullable=True
+        UUID_TYPE,
+        ForeignKey("production_runs.id"),
+        nullable=True,
     )
     phase_id: Mapped[Optional[UUID]] = mapped_column(
-        ForeignKey("phases.id"), nullable=True
+        UUID_TYPE,
+        ForeignKey("phases.id"),
+        nullable=True,
     )
     operator_id: Mapped[Optional[UUID]] = mapped_column(
-        ForeignKey("users.id"), nullable=True
+        UUID_TYPE,
+        ForeignKey("users.id"),
+        nullable=True,
     )
     weight_kg: Mapped[Optional[Decimal]] = mapped_column(
         Numeric(10, 2), nullable=True
@@ -61,7 +64,11 @@ class Lot(Base):
     temperature_c: Mapped[Optional[Decimal]] = mapped_column(
         Numeric(5, 1), nullable=True
     )
-    metadata: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
+        "metadata",
+        JSONB_TYPE,
+        default=dict,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
@@ -98,14 +105,16 @@ class LotGenealogy(Base):
 
     __tablename__ = "lot_genealogy"
 
-    id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(UUID_TYPE, primary_key=True, default=uuid4)
     parent_lot_id: Mapped[Optional[UUID]] = mapped_column(
-        ForeignKey("lots.id"), nullable=True
+        UUID_TYPE,
+        ForeignKey("lots.id"),
+        nullable=True,
     )
     child_lot_id: Mapped[Optional[UUID]] = mapped_column(
-        ForeignKey("lots.id"), nullable=True
+        UUID_TYPE,
+        ForeignKey("lots.id"),
+        nullable=True,
     )
     quantity_used_kg: Mapped[Optional[Decimal]] = mapped_column(
         Numeric(10, 2), nullable=True

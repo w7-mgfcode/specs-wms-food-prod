@@ -2,6 +2,8 @@
 
 from collections.abc import AsyncGenerator
 
+from sqlalchemy import JSON, Uuid
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -30,6 +32,11 @@ class Base(DeclarativeBase):
     """Base class for SQLAlchemy models."""
 
     pass
+
+
+# JSONB variant for SQLite-based tests
+JSONB_TYPE = JSONB().with_variant(JSON(), "sqlite")
+UUID_TYPE = Uuid(as_uuid=True)
 
 
 async def init_db() -> None:

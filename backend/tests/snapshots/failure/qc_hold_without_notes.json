@@ -1,0 +1,10 @@
+{
+  "detail": [
+    {
+      "type": "value_error",
+      "loc": ["body"],
+      "msg": "Value error, Notes required for HOLD/FAIL decisions (min 10 chars)",
+      "input": "NORMALIZED"
+    }
+  ]
+}

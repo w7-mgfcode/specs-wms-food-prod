@@ -1,0 +1,19 @@
+# serializer version: 1
+# name: test_login_failure_snapshot
+  dict({
+    'detail': 'Invalid credentials',
+  })
+# ---
+# name: test_login_success_snapshot
+  dict({
+    'token': 'NORMALIZED',
+    'user': dict({
+      'created_at': 'NORMALIZED',
+      'email': 'test@flowviz.com',
+      'full_name': 'Test User',
+      'id': '00000000-0000-0000-0000-000000000001',
+      'last_login': None,
+      'role': 'OPERATOR',
+    }),
+  })
+# ---

@@ -1,0 +1,14 @@
+# serializer version: 1
+# name: test_create_qc_decision_success_snapshot
+  dict({
+    'decided_at': 'NORMALIZED',
+    'decision': 'PASS',
+    'digital_signature': None,
+    'id': 'NORMALIZED',
+    'lot_id': None,
+    'notes': 'Snapshot test notes',
+    'operator_id': None,
+    'qc_gate_id': None,
+    'temperature_c': '4.0',
+  })
+# ---

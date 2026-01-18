@@ -1,4 +1,4 @@
-"""Characterization tests for health endpoint."""
+"""Characterization tests for health endpoint with snapshot validation."""
 
 from datetime import datetime
 
@@ -36,3 +36,20 @@ async def test_health_response_shape(client: AsyncClient):
     # Parse ISO8601 timestamp (should not raise)
     parsed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
     assert parsed is not None
+
+
+@pytest.mark.asyncio
+async def test_health_snapshot(client: AsyncClient, snapshot):
+    """
+    Snapshot test: Health endpoint success response.
+
+    Golden snapshot captures response shape with normalized timestamp.
+    """
+    response = await client.get("/api/health")
+    assert response.status_code == 200
+
+    data = response.json()
+    # Normalize timestamp for snapshot comparison (timestamps vary)
+    data["timestamp"] = "NORMALIZED"
+
+    assert data == snapshot

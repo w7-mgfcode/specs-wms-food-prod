@@ -181,6 +181,25 @@ backend/
 
 ---
 
+## Testing & Validation (Phase 1)
+
+**Executed in Phase 1 (per PR #8):**
+
+- Manual verification of documentation updates
+- FastAPI scaffold structure validated
+
+**Deferred to Phase 2:**
+
+- `invoke quality` (backend quality checks)
+- `invoke test` (backend test suite)
+- API parity validation (side-by-side responses)
+- Characterization test execution against the legacy API
+
+> Note: Phase 1 focused on scaffolding and documentation; comprehensive automated
+> validation is planned for Phase 2.
+
+---
+
 ## Validation Checkpoints
 
 - [x] FastAPI app starts successfully
