@@ -1,0 +1,16 @@
+# serializer version: 1
+# name: test_create_lot_success_snapshot
+  dict({
+    'created_at': 'NORMALIZED',
+    'id': 'NORMALIZED',
+    'lot_code': 'SNAPSHOT-LOT',
+    'lot_type': 'RAW',
+    'metadata': dict({
+    }),
+    'operator_id': None,
+    'phase_id': None,
+    'production_run_id': None,
+    'temperature_c': '4.0',
+    'weight_kg': '100.50',
+  })
+# ---

@@ -1,7 +1,10 @@
-"""Characterization tests for QC decisions endpoint."""
+"""Characterization tests for QC decisions endpoint with snapshot validation and negative coverage."""
 
 import pytest
 from httpx import AsyncClient
+
+
+# --- Success Tests ---
 
 
 @pytest.mark.asyncio
@@ -56,66 +59,188 @@ async def test_create_qc_decision_response_shape(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_hold_decision_requires_notes(client: AsyncClient):
-    """HOLD decision requires notes (min 10 chars)."""
-    # Without notes - should fail validation
+async def test_create_qc_decision_success_snapshot(client: AsyncClient, snapshot):
+    """
+    Snapshot test: QC decision success response.
+
+    Golden snapshot captures response shape with normalized dynamic fields.
+    """
     response = await client.post(
         "/api/qc-decisions",
         json={
-            "decision": "HOLD",
+            "decision": "PASS",
+            "notes": "Snapshot test notes",
+            "temperature_c": 4.0,
         },
     )
-    assert response.status_code == 422  # Validation error
+    assert response.status_code == 201
 
-    # With short notes - should fail
+    data = response.json()
+    # Normalize dynamic fields
+    data["id"] = "NORMALIZED"
+    data["decided_at"] = "NORMALIZED"
+
+    assert data == snapshot
+
+
+# --- Negative Tests: HOLD/FAIL Decision Validation (Parametrized) ---
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("decision", ["HOLD", "FAIL"])
+async def test_hold_fail_requires_notes(client: AsyncClient, decision: str):
+    """HOLD/FAIL decisions require notes (min 10 chars)."""
     response = await client.post(
         "/api/qc-decisions",
-        json={
-            "decision": "HOLD",
-            "notes": "short",
-        },
+        json={"decision": decision},
     )
     assert response.status_code == 422
 
-    # With proper notes - should succeed
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("decision", ["HOLD", "FAIL"])
+async def test_hold_fail_notes_min_length(client: AsyncClient, decision: str):
+    """Notes must be at least 10 characters for HOLD/FAIL."""
+    response = await client.post(
+        "/api/qc-decisions",
+        json={"decision": decision, "notes": "short"},
+    )
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("decision", ["HOLD", "FAIL"])
+async def test_hold_fail_with_exactly_10_chars_succeeds(client: AsyncClient, decision: str):
+    """HOLD/FAIL with exactly 10 character notes should succeed."""
     response = await client.post(
         "/api/qc-decisions",
         json={
-            "decision": "HOLD",
-            "notes": "Temperature out of range, holding for review",
+            "decision": decision,
+            "notes": "1234567890",  # Exactly 10 chars
         },
     )
     assert response.status_code == 201
 
 
 @pytest.mark.asyncio
-async def test_fail_decision_requires_notes(client: AsyncClient):
-    """FAIL decision requires notes (min 10 chars)."""
-    # Without notes - should fail validation
+@pytest.mark.parametrize("decision", ["HOLD", "FAIL"])
+async def test_hold_fail_with_valid_notes_succeeds(client: AsyncClient, decision: str):
+    """HOLD/FAIL with proper notes (>=10 chars) succeeds."""
     response = await client.post(
         "/api/qc-decisions",
         json={
-            "decision": "FAIL",
+            "decision": decision,
+            "notes": f"Valid notes for {decision} decision - sufficient length",
         },
     )
-    assert response.status_code == 422  # Validation error
+    assert response.status_code == 201
 
-    # With short notes - should fail
+
+# --- Success Tests: PASS Decision ---
+
+
+@pytest.mark.asyncio
+async def test_pass_decision_without_notes_succeeds(client: AsyncClient):
+    """PASS decision does NOT require notes."""
     response = await client.post(
         "/api/qc-decisions",
         json={
-            "decision": "FAIL",
-            "notes": "short",
+            "decision": "PASS",
+        },
+    )
+    assert response.status_code == 201
+
+
+@pytest.mark.asyncio
+async def test_pass_decision_with_optional_notes_succeeds(client: AsyncClient):
+    """PASS decision can optionally include notes."""
+    response = await client.post(
+        "/api/qc-decisions",
+        json={
+            "decision": "PASS",
+            "notes": "No issues found",
+        },
+    )
+    assert response.status_code == 201
+
+
+# --- Negative Tests: Invalid Decision Enum ---
+
+
+@pytest.mark.asyncio
+async def test_invalid_decision_enum_returns_422(client: AsyncClient):
+    """Invalid decision enum value must return 422."""
+    response = await client.post(
+        "/api/qc-decisions",
+        json={
+            "decision": "INVALID",
         },
     )
     assert response.status_code == 422
 
-    # With proper notes - should succeed
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "invalid_decision",
+    ["pass", "HOLD ", "fail", "PASSED", "REJECT", ""],
+)
+async def test_various_invalid_decision_values_return_422(
+    client: AsyncClient, invalid_decision: str
+):
+    """Various invalid decision values must return 422."""
     response = await client.post(
         "/api/qc-decisions",
         json={
-            "decision": "FAIL",
-            "notes": "Contamination detected, batch rejected",
+            "decision": invalid_decision,
+        },
+    )
+    assert response.status_code == 422
+
+
+# --- Success Tests: Valid Decision Enums ---
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("decision", ["PASS", "HOLD", "FAIL"])
+async def test_all_valid_decisions_work(client: AsyncClient, decision: str):
+    """All valid decision enum values should work (with notes for HOLD/FAIL)."""
+    payload = {"decision": decision}
+    if decision in ("HOLD", "FAIL"):
+        payload["notes"] = f"Required notes for {decision} decision"
+
+    response = await client.post("/api/qc-decisions", json=payload)
+    assert response.status_code == 201
+    assert response.json()["decision"] == decision
+
+
+# --- Edge Case Tests ---
+
+
+@pytest.mark.asyncio
+async def test_qc_decision_with_all_optional_fields(client: AsyncClient):
+    """QC decision can include all optional fields."""
+    response = await client.post(
+        "/api/qc-decisions",
+        json={
+            "decision": "PASS",
+            "notes": "Comprehensive check completed",
+            "temperature_c": 4.2,
+            "digital_signature": "sig_123abc",
         },
     )
     assert response.status_code == 201
+    data = response.json()
+    assert data["digital_signature"] == "sig_123abc"
+
+
+@pytest.mark.asyncio
+async def test_qc_decision_with_no_decision_succeeds(client: AsyncClient):
+    """QC decision can be created without a decision (for draft/pending state)."""
+    response = await client.post(
+        "/api/qc-decisions",
+        json={
+            "temperature_c": 5.0,
+        },
+    )
+    assert response.status_code == 201
+    assert response.json()["decision"] is None

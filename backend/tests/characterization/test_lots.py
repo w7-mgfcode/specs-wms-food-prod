@@ -1,7 +1,10 @@
-"""Characterization tests for lots endpoint."""
+"""Characterization tests for lots endpoint with snapshot validation and negative coverage."""
 
 import pytest
 from httpx import AsyncClient
+
+
+# --- Success Tests ---
 
 
 @pytest.mark.asyncio
@@ -89,7 +92,33 @@ async def test_create_lot_with_metadata(client: AsyncClient):
     assert data["metadata"]["supplier"] == "ACME"
 
 
-# --- Validation / Edge-case Tests ---
+@pytest.mark.asyncio
+async def test_create_lot_success_snapshot(client: AsyncClient, snapshot):
+    """
+    Snapshot test: Lot creation success response.
+
+    Golden snapshot captures response shape with normalized dynamic fields.
+    """
+    response = await client.post(
+        "/api/lots",
+        json={
+            "lot_code": "SNAPSHOT-LOT",
+            "lot_type": "RAW",
+            "weight_kg": 100.5,
+            "temperature_c": 4.0,
+        },
+    )
+    assert response.status_code == 201
+
+    data = response.json()
+    # Normalize dynamic fields
+    data["id"] = "NORMALIZED"
+    data["created_at"] = "NORMALIZED"
+
+    assert data == snapshot
+
+
+# --- Negative Tests: Missing Required Fields ---
 
 
 @pytest.mark.asyncio
@@ -108,16 +137,26 @@ async def test_create_lot_missing_lot_code_returns_422(client: AsyncClient):
     assert response.status_code == 422
 
 
+# --- Negative Tests: Weight Boundary Validation ---
+
+
 @pytest.mark.asyncio
-async def test_create_lot_negative_weight_returns_422(client: AsyncClient):
+@pytest.mark.parametrize(
+    "weight,description",
+    [
+        (-1.0, "negative weight"),
+        (-0.01, "small negative weight"),
+    ],
+)
+async def test_create_lot_negative_weight_returns_422(
+    client: AsyncClient, weight: float, description: str
+):
     """Lot creation must fail with 422 when weight_kg is negative."""
     response = await client.post(
         "/api/lots",
         json={
-            "lot_code": "TEST-LOT-NEG",
-            "lot_type": "RAW",
-            "weight_kg": -1.0,
-            "temperature_c": 4.0,
+            "lot_code": f"TEST-LOT-{description.replace(' ', '-').upper()}",
+            "weight_kg": weight,
         },
     )
 
@@ -125,15 +164,22 @@ async def test_create_lot_negative_weight_returns_422(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_create_lot_over_max_weight_returns_422(client: AsyncClient):
+@pytest.mark.parametrize(
+    "weight,description",
+    [
+        (10001.0, "over max by 1"),
+        (15000.0, "significantly over max"),
+    ],
+)
+async def test_create_lot_over_max_weight_returns_422(
+    client: AsyncClient, weight: float, description: str
+):
     """Lot creation must fail with 422 when weight_kg exceeds the allowed upper bound (10000)."""
     response = await client.post(
         "/api/lots",
         json={
-            "lot_code": "TEST-LOT-OVERMAX",
-            "lot_type": "RAW",
-            "weight_kg": 10001.0,  # Schema allows max 10000
-            "temperature_c": 4.0,
+            "lot_code": f"TEST-LOT-{description.replace(' ', '-').upper()}",
+            "weight_kg": weight,
         },
     )
 
@@ -141,15 +187,53 @@ async def test_create_lot_over_max_weight_returns_422(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_create_lot_temperature_below_min_returns_422(client: AsyncClient):
+async def test_create_lot_at_max_weight_boundary_succeeds(client: AsyncClient):
+    """Lot creation should succeed at the exact max weight boundary (10000)."""
+    response = await client.post(
+        "/api/lots",
+        json={
+            "lot_code": "TEST-LOT-MAX-WEIGHT",
+            "weight_kg": 10000.0,
+        },
+    )
+
+    assert response.status_code == 201
+
+
+@pytest.mark.asyncio
+async def test_create_lot_at_zero_weight_succeeds(client: AsyncClient):
+    """Lot creation should succeed at zero weight (boundary)."""
+    response = await client.post(
+        "/api/lots",
+        json={
+            "lot_code": "TEST-LOT-ZERO-WEIGHT",
+            "weight_kg": 0.0,
+        },
+    )
+
+    assert response.status_code == 201
+
+
+# --- Negative Tests: Temperature Boundary Validation ---
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "temp,description",
+    [
+        (-51.0, "below min by 1"),
+        (-100.0, "significantly below min"),
+    ],
+)
+async def test_create_lot_temperature_below_min_returns_422(
+    client: AsyncClient, temp: float, description: str
+):
     """Lot creation must fail with 422 when temperature_c is below the allowed range (-50)."""
     response = await client.post(
         "/api/lots",
         json={
-            "lot_code": "TEST-LOT-COLD",
-            "lot_type": "RAW",
-            "weight_kg": 100.5,
-            "temperature_c": -100.0,  # Schema allows min -50
+            "lot_code": f"TEST-LOT-{description.replace(' ', '-').upper()}",
+            "temperature_c": temp,
         },
     )
 
@@ -157,16 +241,87 @@ async def test_create_lot_temperature_below_min_returns_422(client: AsyncClient)
 
 
 @pytest.mark.asyncio
-async def test_create_lot_temperature_above_max_returns_422(client: AsyncClient):
+@pytest.mark.parametrize(
+    "temp,description",
+    [
+        (101.0, "above max by 1"),
+        (200.0, "significantly above max"),
+    ],
+)
+async def test_create_lot_temperature_above_max_returns_422(
+    client: AsyncClient, temp: float, description: str
+):
     """Lot creation must fail with 422 when temperature_c is above the allowed range (100)."""
     response = await client.post(
         "/api/lots",
         json={
-            "lot_code": "TEST-LOT-HOT",
-            "lot_type": "RAW",
-            "weight_kg": 100.5,
-            "temperature_c": 200.0,  # Schema allows max 100
+            "lot_code": f"TEST-LOT-{description.replace(' ', '-').upper()}",
+            "temperature_c": temp,
         },
     )
 
     assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_create_lot_at_min_temperature_boundary_succeeds(client: AsyncClient):
+    """Lot creation should succeed at the exact min temperature boundary (-50)."""
+    response = await client.post(
+        "/api/lots",
+        json={
+            "lot_code": "TEST-LOT-MIN-TEMP",
+            "temperature_c": -50.0,
+        },
+    )
+
+    assert response.status_code == 201
+
+
+@pytest.mark.asyncio
+async def test_create_lot_at_max_temperature_boundary_succeeds(client: AsyncClient):
+    """Lot creation should succeed at the exact max temperature boundary (100)."""
+    response = await client.post(
+        "/api/lots",
+        json={
+            "lot_code": "TEST-LOT-MAX-TEMP",
+            "temperature_c": 100.0,
+        },
+    )
+
+    assert response.status_code == 201
+
+
+# --- Negative Tests: Lot Type Enum Validation ---
+
+
+@pytest.mark.asyncio
+async def test_create_lot_invalid_lot_type_returns_422(client: AsyncClient):
+    """Lot creation must fail with 422 when lot_type is not a valid enum value."""
+    response = await client.post(
+        "/api/lots",
+        json={
+            "lot_code": "TEST-LOT-INVALID-TYPE",
+            "lot_type": "INVALID",
+        },
+    )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "lot_type",
+    ["RAW", "DEB", "BULK", "MIX", "SKW", "FRZ", "FG"],
+)
+async def test_create_lot_valid_lot_types_succeed(client: AsyncClient, lot_type: str):
+    """All valid lot types should be accepted."""
+    response = await client.post(
+        "/api/lots",
+        json={
+            "lot_code": f"TEST-LOT-{lot_type}",
+            "lot_type": lot_type,
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json()["lot_type"] == lot_type

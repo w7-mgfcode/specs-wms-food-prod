@@ -1,15 +1,16 @@
 """User models matching the database schema."""
 
+import os
+
 import enum
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import DateTime, Enum, ForeignKey, String, Text
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base
+from app.database import Base, UUID_TYPE
 
 if TYPE_CHECKING:
     from app.models.lot import Lot
@@ -27,6 +28,10 @@ class UserRole(str, enum.Enum):
     VIEWER = "VIEWER"
 
 
+IS_SQLITE_TEST = os.getenv("SQLITE_TESTS") == "1"
+AUTH_USERS_TABLE = "auth_users" if IS_SQLITE_TEST else "auth.users"
+
+
 class AuthUser(Base):
     """
     Mock Supabase auth.users table.
@@ -34,12 +39,10 @@ class AuthUser(Base):
     This simulates the Supabase auth schema for local development.
     """
 
-    __tablename__ = "users"
-    __table_args__ = {"schema": "auth"}
+    __tablename__ = "auth_users" if IS_SQLITE_TEST else "users"
+    __table_args__ = {} if IS_SQLITE_TEST else {"schema": "auth"}
 
-    id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(UUID_TYPE, primary_key=True, default=uuid4)
     email: Mapped[Optional[str]] = mapped_column(Text, unique=True, nullable=True)
     encrypted_password: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -57,8 +60,8 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("auth.users.id"),
+        UUID_TYPE,
+        ForeignKey(f"{AUTH_USERS_TABLE}.id"),
         primary_key=True,
     )
     email: Mapped[str] = mapped_column(String, nullable=False)
