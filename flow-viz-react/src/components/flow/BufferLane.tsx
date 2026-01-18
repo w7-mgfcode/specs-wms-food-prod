@@ -45,6 +45,7 @@ export function BufferLane({
                     <LotCard
                         key={lot.id}
                         lot={lot}
+                        lotType={buffer.lotType}
                         lang={lang}
                         onClick={onLotClick ? () => onLotClick(lot) : undefined}
                         isSelected={selectedLotId === lot.id}

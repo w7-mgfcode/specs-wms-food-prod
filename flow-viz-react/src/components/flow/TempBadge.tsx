@@ -1,10 +1,10 @@
 import { Thermometer } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { getTempStatus, type TempStatus } from '../../types/flow';
+import { getTempStatus, type TempStatus, type FlowLotType } from '../../types/flow';
 
 interface TempBadgeProps {
     temperature: number;
-    bufferType: string;
+    lotType: FlowLotType;
     showIcon?: boolean;
 }
 
@@ -14,8 +14,8 @@ const statusStyles: Record<TempStatus, string> = {
     critical: 'bg-[var(--status-fail)] text-white',
 };
 
-export function TempBadge({ temperature, bufferType, showIcon = true }: TempBadgeProps) {
-    const status = getTempStatus(temperature, bufferType);
+export function TempBadge({ temperature, lotType, showIcon = true }: TempBadgeProps) {
+    const status = getTempStatus(temperature, lotType);
 
     return (
         <span

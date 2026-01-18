@@ -17,6 +17,7 @@ export function FirstFlowPage() {
         gates,
         selectedLotId,
         isLoaded,
+        activeGateId,
         loadFlowConfig,
         setActiveGate,
         advanceGate,
@@ -27,6 +28,10 @@ export function FirstFlowPage() {
 
     // Determine if user can interact (OPERATOR, MANAGER, ADMIN)
     const isInteractive = role === 'OPERATOR' || role === 'MANAGER' || role === 'ADMIN';
+
+    // Check if at last gate
+    const isAtLastGate =
+        gates.length > 0 && activeGateId === gates[gates.length - 1]?.id;
 
     // Load config on mount
     useEffect(() => {
@@ -40,7 +45,6 @@ export function FirstFlowPage() {
         (lot: FlowLot) => {
             if (!isInteractive) return;
             selectLot(selectedLotId === lot.id ? null : lot.id);
-            console.log('Lot selected:', lot.code);
         },
         [isInteractive, selectedLotId, selectLot]
     );
@@ -91,12 +95,21 @@ export function FirstFlowPage() {
                             title={language === 'hu' ? 'Visszaállítás' : 'Reset'}
                         >
                             <RotateCcw className="w-3.5 h-3.5" />
-                            {language === 'hu' ? 'Reset' : 'Reset'}
+                            {language === 'hu' ? 'Visszaállítás' : 'Reset'}
                         </button>
                         <button
                             onClick={advanceGate}
-                            className="flex items-center gap-1 px-3 py-1.5 text-xs bg-[var(--status-processing)] hover:opacity-90 text-white rounded-lg transition-colors"
-                            title={language === 'hu' ? 'Következő kapu' : 'Next Gate'}
+                            disabled={isAtLastGate}
+                            className="flex items-center gap-1 px-3 py-1.5 text-xs bg-[var(--status-processing)] hover:opacity-90 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={
+                                isAtLastGate
+                                    ? language === 'hu'
+                                        ? 'Utolsó kapu'
+                                        : 'Last gate'
+                                    : language === 'hu'
+                                      ? 'Következő kapu'
+                                      : 'Next Gate'
+                            }
                         >
                             {language === 'hu' ? 'Következő' : 'Next'}
                             <ChevronRight className="w-3.5 h-3.5" />

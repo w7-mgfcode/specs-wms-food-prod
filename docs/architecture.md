@@ -24,7 +24,7 @@ We are migrating from Node/Express to **FastAPI** using the **strangler pattern*
 |  |  | Dashboard | |  Command  | | Validator | |     First Flow      | | |
 |  |  |   (V1)    | |  Center   | |   (V3)    | |       (V4)          | | |
 |  |  |           | |   (V2)    | |           | |                     | | |
-|  |  |- FlowCanv | |- Lot Forms| |- Audit Log| |- BufferLane (x4)    | | |
+|  |  |- FlowCanvas| |- Lot Forms| |- Audit Log| |- BufferLane (x4)    | | |
 |  |  |- Phases   | |- QC Gates | |- Trace    | |- LotCard            | | |
 |  |  |- Alerts   | |- Prod Ctrl| |- Reports  | |- GateStepper (7)    | | |
 |  |  +-----------+ +-----------+ +-----------+ +---------------------+ | |

@@ -1,11 +1,12 @@
 import { memo } from 'react';
 import { cn } from '../../lib/utils';
 import { TempBadge } from './TempBadge';
-import type { FlowLot } from '../../types/flow';
+import type { FlowLot, FlowLotType } from '../../types/flow';
 import type { Language } from '../../types/scenario';
 
 interface LotCardProps {
     lot: FlowLot;
+    lotType: FlowLotType;
     lang: Language;
     onClick?: () => void;
     isSelected?: boolean;
@@ -20,7 +21,7 @@ const statusColors: Record<string, string> = {
     fail: 'border-[var(--status-fail)]',
 };
 
-function LotCardComponent({ lot, lang, onClick, isSelected, isInteractive = true }: LotCardProps) {
+function LotCardComponent({ lot, lotType, lang, onClick, isSelected, isInteractive = true }: LotCardProps) {
     const description = lot.description[lang];
     const hasWeight = lot.weight_kg !== undefined;
     const hasQuantity = lot.quantity !== undefined;
@@ -70,7 +71,7 @@ function LotCardComponent({ lot, lang, onClick, isSelected, isInteractive = true
                         {lot.quantity} pcs
                     </span>
                 )}
-                {hasTemp && <TempBadge temperature={lot.temperature_c!} bufferType={lot.bufferId} />}
+                {hasTemp && <TempBadge temperature={lot.temperature_c!} lotType={lotType} />}
             </div>
         </div>
     );

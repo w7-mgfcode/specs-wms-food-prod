@@ -65,14 +65,14 @@ This phase focuses on the **first production flow** using realistic buffer confi
 - Lot cards with individual weight, temp, and type
 - Empty state message when no lots present
 
-### QC Gate Flow (7 Gates)
+### QC Gate Flow (7 Operational Gates: 1, 3–8)
 
 ```
 Gate 1: Receipt → Gate 3: Deboning → Gate 4: BULK Ready → Gate 5: Mix
     → Gate 6: Skewer Weigh → Gate 7: Freeze → Gate 8: Packaging
 ```
 
-Note: Gate numbering follows production floor conventions (Gate 2 reserved for future expansion).
+Note: There are 7 operational QC gates. Gate numbering follows production floor conventions: Gate 2 is reserved for future expansion, so operational gates are numbered 1 and 3–8.
 
 **Stepper Features:**
 - Active gate highlighting
@@ -179,8 +179,8 @@ FirstFlowPage (Layout & Orchestration)
 | Buffer | Lot Code | Description | Weight (kg) | Temp (°C) | Qty | Status |
 |--------|----------|-------------|-------------|-----------|-----|--------|
 | LK | BULK-20260114-DUNA-5001 | Breast/Mell | 200 | 3.2 | — | pass |
-| LK | BULK-20260114-DUNA-5002 | Skin/Bor | 30 | 2.8 | — | pass |
-| LK | BULK-20260114-DUNA-5003 | Thigh Fillet/Combfile | 120 | 3.5 | — | processing |
+| LK | BULK-20260114-DUNA-5002 | Skin/Bőr | 30 | 2.8 | — | pass |
+| LK | BULK-20260114-DUNA-5003 | Thigh Fillet/Combfilé | 120 | 3.5 | — | processing |
 | MIX | MIXLOT-20260115-DUNA-0001 | Today's Mix/Mai Mix | 1070 | 2.5 | — | pass |
 | SKW15 | SKW15-20260115-DUNA-0001 | 15kg rods | — | 3.0 | 20 pcs | pass |
 | SKW15 | SKW15-20260115-DUNA-0002 | 15kg rods | — | 3.1 | 20 pcs | pending |

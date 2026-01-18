@@ -55,18 +55,33 @@ export interface FirstFlowConfig {
 /** Temperature status for badge coloring */
 export type TempStatus = 'ok' | 'warning' | 'critical';
 
+/** Logical temperature profiles */
+export type TempProfile = 'frozen' | 'chilled';
+
 /**
- * Determine temperature status based on buffer type.
- * - Frozen (FRZ): -25°C to -18°C = ok, > -18°C to -10°C = warning, else critical
- * - Chilled: 0°C to 4°C = ok, > 4°C to 7°C = warning, else critical
+ * Mapping from lot type to temperature profile.
+ * - FRZ (Frozen): Uses frozen temperature ranges
+ * - All others: Use chilled temperature ranges
  */
-export function getTempStatus(temp: number, bufferType: string): TempStatus {
-    if (bufferType === 'FRZ') {
+export function getTempProfile(lotType: FlowLotType): TempProfile {
+    return lotType === 'FRZ' ? 'frozen' : 'chilled';
+}
+
+/**
+ * Determine temperature status based on lot type.
+ * - Frozen (FRZ): -25°C to -18°C = ok, > -18°C to -10°C = warning, else critical
+ * - Chilled (RAW/DEB/BULK/MIX/SKW/FG): 0°C to 4°C = ok, > 4°C to 7°C = warning, else critical
+ */
+export function getTempStatus(temp: number, lotType: FlowLotType): TempStatus {
+    const profile = getTempProfile(lotType);
+
+    if (profile === 'frozen') {
         // Frozen: -25°C to -18°C
         if (temp >= -25 && temp <= -18) return 'ok';
         if (temp > -18 && temp <= -10) return 'warning';
         return 'critical';
     }
+
     // Chilled: 0°C to 4°C
     if (temp >= 0 && temp <= 4) return 'ok';
     if (temp > 4 && temp <= 7) return 'warning';

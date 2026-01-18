@@ -2,9 +2,6 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import type { BufferConfig, FlowLot, FlowGate, FirstFlowConfig } from '../types/flow';
 
-// Import config JSON (will be loaded dynamically)
-import firstFlowConfigData from '../../public/scenarios/first-flow-config.json';
-
 interface FlowState {
     // Configuration
     buffers: Record<string, BufferConfig>;
@@ -15,9 +12,10 @@ interface FlowState {
     activeGateId: number | string | null;
     selectedLotId: string | null;
     isLoaded: boolean;
+    loadError: string | null;
 
     // Actions
-    loadFlowConfig: () => void;
+    loadFlowConfig: () => Promise<void>;
     setActiveGate: (gateId: number | string) => void;
     advanceGate: () => void;
     resetGates: () => void;
@@ -35,30 +33,38 @@ export const useFlowStore = create<FlowState>()(
             activeGateId: null,
             selectedLotId: null,
             isLoaded: false,
+            loadError: null,
 
-            loadFlowConfig: () => {
-                const config = firstFlowConfigData as FirstFlowConfig;
+            loadFlowConfig: async () => {
+                try {
+                    const response = await fetch('/scenarios/first-flow-config.json');
+                    if (!response.ok) {
+                        throw new Error(`Failed to load config: ${response.statusText}`);
+                    }
+                    const config = (await response.json()) as FirstFlowConfig;
 
-                // Mark first gate as active if not already set
-                const gates = config.gates.map((gate, idx) => ({
-                    ...gate,
-                    isActive: idx === 0,
-                    isCompleted: false,
-                }));
+                    // Mark first gate as active if not already set
+                    const gates = config.gates.map((gate, idx) => ({
+                        ...gate,
+                        isActive: idx === 0,
+                        isCompleted: false,
+                    }));
 
-                set({
-                    buffers: config.buffers,
-                    lots: config.lots,
-                    gates,
-                    activeGateId: gates[0]?.id ?? null,
-                    isLoaded: true,
-                });
-
-                console.log('Flow config loaded:', {
-                    buffers: Object.keys(config.buffers).length,
-                    lots: config.lots.length,
-                    gates: gates.length,
-                });
+                    set({
+                        buffers: config.buffers,
+                        lots: config.lots,
+                        gates,
+                        activeGateId: gates[0]?.id ?? null,
+                        isLoaded: true,
+                        loadError: null,
+                    });
+                } catch (error) {
+                    set({
+                        loadError:
+                            error instanceof Error ? error.message : 'Failed to load flow configuration',
+                        isLoaded: false,
+                    });
+                }
             },
 
             setActiveGate: (gateId) => {
@@ -94,8 +100,6 @@ export const useFlowStore = create<FlowState>()(
                     gates: updatedGates,
                     activeGateId: nextGate.id,
                 });
-
-                console.log(`Advanced to gate: ${nextGate.id}`);
             },
 
             resetGates: () => {
