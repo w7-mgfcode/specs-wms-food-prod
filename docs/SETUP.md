@@ -79,7 +79,130 @@ Navigate to **Settings → Branches → Add branch protection rule**
 
 ---
 
-## 3. GitHub Settings
+## 3. Development Environment Setup
+
+### Option A: DevContainer (Recommended)
+
+1. **Prerequisites**: Docker Desktop, VS Code with Remote - Containers extension
+
+2. **Open in Container**:
+   ```bash
+   # Clone the repository
+   git clone https://github.com/w7-mgfcode/specs-wms-food-prod.git
+   cd specs-wms-food-prod
+   
+   # Open in VS Code
+   code .
+   # Then: Ctrl+Shift+P → "Dev Containers: Reopen in Container"
+   ```
+
+3. **What's Included**:
+   - Python 3.13 with UV package manager
+   - Node.js 22 with pnpm
+   - PostgreSQL 17 client tools
+   - Pre-configured extensions (Pylance, ESLint, Prettier)
+
+### Option B: Manual Setup
+
+#### Backend (Python/FastAPI)
+
+```bash
+# Navigate to backend
+cd backend
+
+# Install UV (fast Python package manager)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Create virtual environment and install dependencies
+uv venv
+source .venv/bin/activate  # Linux/macOS
+# .venv\Scripts\activate   # Windows
+
+uv pip install -e ".[dev]"
+
+# Start database services
+docker compose -f docker/docker-compose.yml up -d postgres valkey
+
+# Run database migrations
+alembic upgrade head
+
+# Start the API server
+uvicorn app.main:app --reload --port 8000
+```
+
+#### Frontend (React/TypeScript)
+
+```bash
+# Navigate to frontend
+cd flow-viz-react
+
+# Install dependencies
+pnpm install
+
+# Start development server
+pnpm dev
+```
+
+### Environment Variables
+
+Copy the example environment file and configure:
+
+```bash
+# Backend
+cp backend/.env.example backend/.env
+
+# Frontend
+cp flow-viz-react/.env.example flow-viz-react/.env.local
+```
+
+**Required Backend Variables**:
+```env
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/wms_food_prod
+VALKEY_URL=valkey://localhost:6379/0
+SECRET_KEY=your-secret-key-here
+DEBUG=true
+```
+
+**Required Frontend Variables**:
+```env
+VITE_API_URL=http://localhost:8000
+VITE_SUPABASE_URL=your-supabase-url
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+---
+
+## 4. Docker Compose (Full Stack)
+
+```bash
+# Start all services
+docker compose up -d
+
+# Services available:
+# - PostgreSQL 17:   localhost:5432
+# - Valkey 8.1+:     localhost:6379
+# - FastAPI:         localhost:8000
+# - React (Vite):    localhost:5173
+```
+
+### Service Architecture
+
+```
++------------------+     +------------------+
+|   React (5173)   |---->|  FastAPI (8000)  |
++------------------+     +------------------+
+                                  |
+                    +-------------+-------------+
+                    |                           |
+             +------+------+             +------+------+
+             | PostgreSQL  |             |   Valkey    |
+             |    (5432)   |             |   (6379)    |
+             +-------------+             +-------------+
+```
+
+---
+
+## 5. GitHub Settings
 
 ### Enable Features
 
@@ -103,7 +226,7 @@ Navigate to **Settings → Branches → Add branch protection rule**
 
 ---
 
-## 4. Required Secrets (CI/CD)
+## 6. Required Secrets (CI/CD)
 
 Navigate to **Settings → Secrets and variables → Actions**
 
@@ -116,7 +239,7 @@ Navigate to **Settings → Secrets and variables → Actions**
 
 ---
 
-## 5. Labels Setup
+## 7. Labels Setup
 
 Create these labels for consistent PR/Issue management:
 
@@ -133,7 +256,7 @@ Create these labels for consistent PR/Issue management:
 
 ---
 
-## 6. First Phase Workflow
+## 8. First Phase Workflow
 
 ```bash
 # Start work on phase/0
@@ -159,8 +282,43 @@ git push origin v0.1.0
 
 ---
 
+## 9. Running Tests
+
+### Backend Tests
+
+```bash
+cd backend
+
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=app --cov-report=html
+
+# Run specific test file
+pytest tests/characterization/test_lot_routes.py -v
+```
+
+### Frontend Tests
+
+```bash
+cd flow-viz-react
+
+# Run unit tests
+pnpm test
+
+# Run with coverage
+pnpm test:coverage
+
+# Run E2E tests (requires running app)
+pnpm test:e2e
+```
+
+---
+
 ## Checklist
 
+### Initial Setup
 - [ ] Branch structure created (main, develop, phase/0)
 - [ ] Branch protection rules configured
 - [ ] CI workflow triggers on develop branch
@@ -168,3 +326,19 @@ git push origin v0.1.0
 - [ ] Required secrets added
 - [ ] Labels created
 - [ ] Initial phase-0 PR merged to develop
+
+### Development Environment
+- [ ] Docker Desktop installed
+- [ ] VS Code with recommended extensions
+- [ ] DevContainer opens successfully (or manual setup complete)
+- [ ] PostgreSQL 17 running
+- [ ] Valkey 8.1+ running
+- [ ] Backend API starts on :8000
+- [ ] Frontend dev server starts on :5173
+- [ ] Environment variables configured
+
+### Verification
+- [ ] `curl http://localhost:8000/health` returns OK
+- [ ] Frontend connects to API successfully
+- [ ] Database migrations run without errors
+- [ ] Tests pass locally
