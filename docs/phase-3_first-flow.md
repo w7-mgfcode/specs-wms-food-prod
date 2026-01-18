@@ -3,7 +3,8 @@
 ## Context
 This document captures the requested **Phase 3** effort to define a **full, interactive, step-by-step
 production flow** (or a single-stack enhancement) with a **creative visual**. The scope includes
-initial buffer lots and QC gate sequencing for the first flow.
+initial buffer lots and QC gate sequencing for the first flow, with data aligned to the existing
+lot genealogy and QC decision requirements.
 
 ### Reference inputs (from research notes)
 **Buffers / lots**
@@ -46,21 +47,30 @@ realistic buffer lots, temperatures, weights, and QC gate steps. The flow should
 stack in a meaningful, engaging way.
 
 ### Unknowns / open questions
-- What exact label and requirements does **Gate 8** represent (Packaging, Palletizing, Shipment)?
-- Which UI mode should be the primary surface for the new flow (V1 dashboard, V2 command, V3
-  validator, or a dedicated Phase 3 mode)?
-- Should the flow allow editing/overrides of lots and QC decisions, or be strictly read-only?
-- Are there additional constraints (e.g., HACCP temperature logging requirements per gate) beyond
-  what is already documented?
+- **Gate 8 definition**: Is Gate 8 Packaging, Palletizing, Shipment, or a custom compliance gate?
+  What fields must be captured (labels, operator sign-off, pallet IDs, shipping temps)?
+- **Primary UI surface**: Should Phase 3 live in V1 (Dashboard), V2 (Command Center), V3
+  (Validator), or a dedicated Phase 3 route? Which user persona is the priority?
+- **Editability and authority**: Are lots/QC decisions editable during step progression, or locked
+  as read-only snapshots for audit integrity?
+- **HACCP compliance**: Do we need explicit temperature log capture at every CCP gate, and how
+  should exceptions (HOLD/FAIL) be represented in the UI?
+- **Data contract**: Do we source this from mock config only, or will it map 1:1 to backend
+  schema (lots, lot_genealogy, qc_decisions)?
 
 ### Relevant dimensions
 - **Tech:** React-based flow visualization, Zustand state, potential Supabase or FastAPI-backed
-  data sources.
-- **Data:** Lot identifiers, weights, temperatures, quantities (pcs), and gate decisions.
-- **Security:** Role-based visibility (viewer/operator/manager/auditor), and immutable QC logs.
-- **Cost:** Frontend build effort vs. backend parity changes; choose the lowest-impact approach
-  if scope must remain small.
-- **Scale:** Must support multiple lots per buffer and multiple gates per flow without visual clutter.
+  data sources, and reusable UI widgets for gates/lots/buffers.
+- **Data:** Lot identifiers, weights, temperatures, quantities (pcs), parent/child relations, QC
+  decisions, and timestamps for step progression.
+- **Security:** Role-based visibility (viewer/operator/manager/auditor), immutable QC logs, and
+  audit trails for gate decisions.
+- **Cost:** Frontend build effort vs. backend parity changes; prioritize minimal backend changes
+  and schema reuse where possible.
+- **Scale:** Must support multiple lots per buffer, multiple buffers per flow, and multiple gates
+  without overwhelming the screen.
+- **UX/Accessibility:** Clear active-step cueing, compact density with progressive disclosure,
+  and readability for operators on factory-floor displays.
 
 ---
 
@@ -75,6 +85,8 @@ stack in a meaningful, engaging way.
    - Horizontal lanes by buffer type (LK, MIX, SKW15, SKW30), with gate markers and lot cards.
 4. **Timeline + snapshots**
    - A vertical timeline of gates; each gate expands into buffer snapshots and QC metadata.
+5. **Split view (map + detail)**
+   - Left panel shows lane map; right panel shows selected lot/gate details and QC decision form.
 
 ### Pros / cons
 - **Run Mode overlay**
@@ -89,11 +101,15 @@ stack in a meaningful, engaging way.
 - **Timeline + snapshots**
   - Pros: Strong narrative flow, easy to scan.
   - Cons: Less “live” feel if not animated.
+- **Split view**
+  - Pros: Keeps map clean while allowing depth for QA/QC details.
+  - Cons: More layout complexity, risks competing focal points.
 
 ### Patterns / analogies / mental models
 - **Manufacturing line storyboard:** each gate is a frame with contextual lot cards.
 - **Airport baggage flow:** buffers as conveyor bays, gates as checkpoints.
 - **Kanban + swimlanes:** buffers are lanes, lots are cards, gates are column separators.
+- **Control room dashboard:** high-level view with drill-down panel for exceptions.
 
 ---
 
@@ -103,20 +119,24 @@ stack in a meaningful, engaging way.
 - **React + Zustand** for step flow state, gate progression, and active-lot selection.
 - **Composable UI widgets** for lot cards, gate panels, and buffer summaries.
 - **Structured scenario data** (lots, gates, transitions) to drive dynamic rendering.
+- **State machine mindset** (simple finite state for gates) to avoid ambiguous transitions.
 
 ### Best practices
 - **Progressive disclosure:** show summary first, expand details on interaction.
 - **Consistency with QC gate models:** explicit gate types and immutable decisions.
 - **Semantic temperature/weight badges:** quick comprehension of compliance status.
+- **Stable identifiers:** keep lot codes and gate IDs persistent to support audit links.
 
 ### Anti-patterns
 - **Overloading a single screen** with too many nodes, leading to visual noise.
 - **Hidden state transitions** without explicit UI cues.
 - **Unbounded interactivity** that makes parity or audit trails ambiguous.
+- **Gate-specific logic scattered across components**, making the flow hard to change.
 
 ### Risks / uncertainties
 - Gate 8 ambiguity may lead to incorrect labeling or compliance assumptions.
 - Without a clear data contract, the UI could diverge from existing traceability structures.
+- Over-indexing on UI polish without validating operator workflows could slow adoption.
 
 ---
 
