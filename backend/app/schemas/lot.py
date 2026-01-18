@@ -35,7 +35,7 @@ class LotResponse(BaseModel):
     Node/Express returns the full lot row after INSERT.
     """
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: UUID
     lot_code: str
@@ -45,5 +45,8 @@ class LotResponse(BaseModel):
     operator_id: Optional[UUID] = None
     weight_kg: Optional[Decimal] = None
     temperature_c: Optional[Decimal] = None
-    metadata: dict[str, Any] = Field(default_factory=dict, validation_alias="metadata_")
+    # ORM uses metadata_ (to avoid SQLAlchemy reserved name), API outputs as metadata
+    metadata: dict[str, Any] = Field(
+        default_factory=dict, alias="metadata_", serialization_alias="metadata"
+    )
     created_at: datetime
