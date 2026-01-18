@@ -15,6 +15,7 @@ export interface BufferConfig {
     tempRange: string;
     lotType: FlowLotType;
     color: string;
+    displayOrder?: number; // Optional ordering for lane display
 }
 
 // ==================== LOT DATA ====================

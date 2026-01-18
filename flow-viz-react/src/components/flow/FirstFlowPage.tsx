@@ -17,6 +17,7 @@ export function FirstFlowPage() {
         gates,
         selectedLotId,
         isLoaded,
+        loadError,
         activeGateId,
         loadFlowConfig,
         setActiveGate,
@@ -58,6 +59,29 @@ export function FirstFlowPage() {
         [isInteractive, setActiveGate]
     );
 
+    // Error state
+    if (loadError) {
+        const errorMessage =
+            language === 'hu'
+                ? 'Nem sikerült betölteni a folyamat konfigurációját. Próbáld újra.'
+                : 'Failed to load flow configuration. Please try again.';
+        const retryText = language === 'hu' ? 'Újra próbálom' : 'Retry';
+
+        return (
+            <div className="flex flex-col items-center justify-center h-64 space-y-4">
+                <div className="text-red-400 text-center">{errorMessage}</div>
+                <button
+                    type="button"
+                    onClick={loadFlowConfig}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+                >
+                    {retryText}
+                </button>
+            </div>
+        );
+    }
+
+    // Loading state
     if (!isLoaded) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -68,8 +92,13 @@ export function FirstFlowPage() {
         );
     }
 
-    const bufferOrder = ['LK', 'MIX', 'SKW15', 'SKW30'];
-    const orderedBuffers = bufferOrder.filter((id) => buffers[id]).map((id) => buffers[id]);
+    // Derive buffer order from config (sorted by displayOrder if available, otherwise by id)
+    const orderedBuffers = Object.values(buffers).sort((a, b) => {
+        if (a.displayOrder !== undefined && b.displayOrder !== undefined) {
+            return a.displayOrder - b.displayOrder;
+        }
+        return a.id.localeCompare(b.id);
+    });
 
     return (
         <div className="space-y-6 p-4">

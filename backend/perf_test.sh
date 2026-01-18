@@ -16,8 +16,8 @@ for i in $(seq 1 $REQUESTS); do
 done
 END=$(date +%s%N)
 DURATION=$((($END - $START) / 1000000))  # Convert to milliseconds
-AVG=$(($DURATION / $REQUESTS))
-echo "  Total: ${DURATION}ms, Average: ${AVG}ms per request"
+HEALTH_AVG=$(($DURATION / $REQUESTS))
+echo "  Total: ${DURATION}ms, Average: ${HEALTH_AVG}ms per request"
 echo ""
 
 # Test traceability endpoint with existing lot
@@ -28,12 +28,12 @@ for i in $(seq 1 $REQUESTS); do
 done
 END=$(date +%s%N)
 DURATION=$((($END - $START) / 1000000))
-AVG=$(($DURATION / $REQUESTS))
-echo "  Total: ${DURATION}ms, Average: ${AVG}ms per request"
+TRACE_AVG=$(($DURATION / $REQUESTS))
+echo "  Total: ${DURATION}ms, Average: ${TRACE_AVG}ms per request"
 echo ""
 
 echo "=== Performance Summary ==="
-echo "Health endpoint: ${AVG}ms average (Target P50: <5ms)"
-echo "Traceability endpoint: ${AVG}ms average (Target P50: <30ms)"
+echo "Health endpoint: ${HEALTH_AVG}ms average (Target P50: <5ms)"
+echo "Traceability endpoint: ${TRACE_AVG}ms average (Target P50: <30ms)"
 echo ""
 echo "Note: These are sequential tests. Concurrent load tests would show true performance."

@@ -13,7 +13,7 @@ Phase 3 delivers an **interactive, lane-based production flow visualization** fe
 
 - **Buffer lanes** with real-time lot tracking (LK, MIX, SKW15, SKW30)
 - **Temperature monitoring** with visual indicators (0-4°C, 0°C, -20°C)
-- **QC gate progression** with stepper UI showing 8-gate flow
+- **QC gate progression** with stepper UI showing 7 operational gates (gates 1 and 3–8; gate 2 reserved)
 - **Role-based access control** (OPERATOR/MANAGER/ADMIN can interact, others view-only)
 - **Zustand state management** for flow-specific state
 
