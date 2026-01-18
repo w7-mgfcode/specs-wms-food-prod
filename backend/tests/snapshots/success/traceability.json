@@ -1,0 +1,33 @@
+{
+  "central": {
+    "id": "22222222-2222-2222-2222-222222222201",
+    "lot_code": "MIX-BATCH-88",
+    "lot_type": "MIX",
+    "production_run_id": null,
+    "phase_id": null,
+    "operator_id": null,
+    "weight_kg": "540.00",
+    "temperature_c": null,
+    "metadata": {},
+    "created_at": "NORMALIZED"
+  },
+  "parents": [
+    {
+      "id": "NORMALIZED",
+      "lot_code": "RAW-BEEF-001",
+      "lot_type": "RAW"
+    },
+    {
+      "id": "NORMALIZED",
+      "lot_code": "RAW-SPICE-001",
+      "lot_type": "RAW"
+    }
+  ],
+  "children": [
+    {
+      "id": "NORMALIZED",
+      "lot_code": "FG-DONER-X1",
+      "lot_type": "FG"
+    }
+  ]
+}

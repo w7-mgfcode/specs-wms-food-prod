@@ -45,5 +45,5 @@ class LotResponse(BaseModel):
     operator_id: Optional[UUID] = None
     weight_kg: Optional[Decimal] = None
     temperature_c: Optional[Decimal] = None
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict, validation_alias="metadata_")
     created_at: datetime

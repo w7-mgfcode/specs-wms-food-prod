@@ -7,10 +7,9 @@ from typing import TYPE_CHECKING, Any, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, Numeric, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base
+from app.database import Base, JSONB_TYPE, UUID_TYPE
 
 if TYPE_CHECKING:
     from app.models.lot import Lot
@@ -43,19 +42,19 @@ class QCGate(Base):
 
     __tablename__ = "qc_gates"
 
-    id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(UUID_TYPE, primary_key=True, default=uuid4)
     scenario_id: Mapped[Optional[UUID]] = mapped_column(
-        ForeignKey("scenarios.id", ondelete="CASCADE"), nullable=True
+        UUID_TYPE,
+        ForeignKey("scenarios.id", ondelete="CASCADE"),
+        nullable=True,
     )
     gate_number: Mapped[int] = mapped_column(Integer, nullable=False)
-    name: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    name: Mapped[dict[str, Any]] = mapped_column(JSONB_TYPE, nullable=False)
     gate_type: Mapped[Optional[GateType]] = mapped_column(
         Enum(GateType, name="gate_type", create_constraint=False), nullable=True
     )
     is_ccp: Mapped[bool] = mapped_column(Boolean, default=False)  # Critical Control Point
-    checklist: Mapped[list[Any]] = mapped_column(JSONB, default=list)
+    checklist: Mapped[list[Any]] = mapped_column(JSONB_TYPE, default=list)
 
     # Relationships
     scenario: Mapped[Optional["Scenario"]] = relationship(
@@ -76,17 +75,21 @@ class QCDecision(Base):
 
     __tablename__ = "qc_decisions"
 
-    id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(UUID_TYPE, primary_key=True, default=uuid4)
     lot_id: Mapped[Optional[UUID]] = mapped_column(
-        ForeignKey("lots.id"), nullable=True
+        UUID_TYPE,
+        ForeignKey("lots.id"),
+        nullable=True,
     )
     qc_gate_id: Mapped[Optional[UUID]] = mapped_column(
-        ForeignKey("qc_gates.id"), nullable=True
+        UUID_TYPE,
+        ForeignKey("qc_gates.id"),
+        nullable=True,
     )
     operator_id: Mapped[Optional[UUID]] = mapped_column(
-        ForeignKey("users.id"), nullable=True
+        UUID_TYPE,
+        ForeignKey("users.id"),
+        nullable=True,
     )
     decision: Mapped[Optional[Decision]] = mapped_column(
         Enum(Decision, name="decision", create_constraint=False), nullable=True

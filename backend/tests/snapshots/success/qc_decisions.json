@@ -1,0 +1,11 @@
+{
+  "id": "NORMALIZED",
+  "lot_id": null,
+  "qc_gate_id": null,
+  "operator_id": null,
+  "decision": "PASS",
+  "notes": "All checks passed",
+  "temperature_c": "3.8",
+  "digital_signature": null,
+  "decided_at": "NORMALIZED"
+}

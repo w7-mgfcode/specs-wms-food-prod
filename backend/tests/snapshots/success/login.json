@@ -1,0 +1,11 @@
+{
+  "user": {
+    "id": "00000000-0000-0000-0000-000000000001",
+    "email": "test@flowviz.com",
+    "full_name": "Test User",
+    "role": "OPERATOR",
+    "created_at": "NORMALIZED",
+    "last_login": null
+  },
+  "token": "NORMALIZED"
+}

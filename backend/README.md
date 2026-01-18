@@ -74,6 +74,10 @@ docker compose -f docker/docker-compose.yml down
 ## Testing
 
 ```bash
+# Phase 2: invoke-based suites
+invoke quality
+invoke test
+
 # Run all tests
 pytest
 

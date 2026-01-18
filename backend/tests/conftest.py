@@ -1,5 +1,7 @@
 """Pytest fixtures and configuration."""
 
+import os
+
 import asyncio
 from collections.abc import AsyncGenerator, Generator
 
@@ -7,6 +9,8 @@ import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+os.environ.setdefault("SQLITE_TESTS", "1")
 
 from app.database import Base
 from app.api.deps import get_db  # Import from single source of truth
@@ -32,6 +36,7 @@ async def db_engine():
     engine = create_async_engine(
         TEST_DATABASE_URL,
         echo=False,
+        execution_options={"schema_translate_map": {"auth": None}},
     )
 
     async with engine.begin() as conn:
