@@ -3,6 +3,7 @@
 import asyncio
 from collections import deque
 from typing import Any, Literal
+from uuid import UUID
 
 from app.tasks import celery_app
 
@@ -33,9 +34,15 @@ async def _calculate_deep_genealogy_async(lot_id: str) -> dict[str, Any]:
     from app.database import async_session_maker
     from app.models.lot import Lot, LotGenealogy
 
+    # Parse lot_id to UUID once at entry point
+    try:
+        lot_uuid = UUID(lot_id)
+    except (TypeError, ValueError):
+        return {"error": "Invalid lot_id format", "lot_id": lot_id}
+
     async with async_session_maker() as db:
         # Get the central lot
-        stmt = select(Lot).where(Lot.id == lot_id)
+        stmt = select(Lot).where(Lot.id == lot_uuid)
         result = await db.execute(stmt)
         lot = result.scalar_one_or_none()
 
@@ -43,8 +50,8 @@ async def _calculate_deep_genealogy_async(lot_id: str) -> dict[str, Any]:
             return {"error": "Lot not found", "lot_id": lot_id}
 
         # Calculate full genealogy tree (recursive)
-        ancestors = await _get_all_ancestors(db, lot_id, max_depth=10)
-        descendants = await _get_all_descendants(db, lot_id, max_depth=10)
+        ancestors = await _get_all_ancestors(db, lot_uuid, max_depth=10)
+        descendants = await _get_all_descendants(db, lot_uuid, max_depth=10)
 
         genealogy_data = {
             "lot_id": str(lot_id),
@@ -64,7 +71,7 @@ async def _calculate_deep_genealogy_async(lot_id: str) -> dict[str, Any]:
 
 async def _traverse_genealogy(
     db,
-    root_lot_id: str,
+    root_lot_id: UUID,
     *,
     max_depth: int,
     direction: Literal["ancestors", "descendants"],
@@ -77,7 +84,7 @@ async def _traverse_genealogy(
 
     Args:
         db: Database session
-        root_lot_id: Starting lot UUID
+        root_lot_id: Starting lot UUID (typed as UUID, not str)
         max_depth: Maximum traversal depth
         direction: "ancestors" to find parents, "descendants" to find children
 
@@ -89,8 +96,8 @@ async def _traverse_genealogy(
     from app.models.lot import Lot, LotGenealogy
 
     results: list[dict] = []
-    visited: set[str] = set()
-    queue: deque[tuple[str, int]] = deque([(root_lot_id, 0)])
+    visited: set[UUID] = set()
+    queue: deque[tuple[UUID, int]] = deque([(root_lot_id, 0)])
 
     while queue:
         current_id, depth = queue.popleft()
@@ -137,7 +144,7 @@ async def _traverse_genealogy(
     return results
 
 
-async def _get_all_ancestors(db, lot_id: str, max_depth: int = 10) -> list[dict]:
+async def _get_all_ancestors(db, lot_id: UUID, max_depth: int = 10) -> list[dict]:
     """Recursively get all ancestor lots up to max_depth."""
     return await _traverse_genealogy(
         db,
@@ -147,7 +154,7 @@ async def _get_all_ancestors(db, lot_id: str, max_depth: int = 10) -> list[dict]
     )
 
 
-async def _get_all_descendants(db, lot_id: str, max_depth: int = 10) -> list[dict]:
+async def _get_all_descendants(db, lot_id: UUID, max_depth: int = 10) -> list[dict]:
     """Recursively get all descendant lots up to max_depth."""
     return await _traverse_genealogy(
         db,

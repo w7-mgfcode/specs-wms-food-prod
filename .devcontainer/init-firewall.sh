@@ -51,6 +51,9 @@ while read -r cidr; do
 done < <(echo "$gh_ranges" | jq -r '(.web + .api + .git)[]' | aggregate -q)
 
 # Resolve and add other allowed domains
+# IPv4 regex pattern for validation
+IPV4_REGEX='^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$'
+
 for domain in \
     "registry.npmjs.org" \
     "api.anthropic.com" \
@@ -58,16 +61,18 @@ for domain in \
     "statsig.anthropic.com" \
     "statsig.com"; do
     echo "Resolving $domain..."
-    ips=$(dig +short A "$domain")
+    # Filter dig output to only include valid IPv4 addresses (skip CNAMEs)
+    ips=$(dig +short A "$domain" | grep -E "$IPV4_REGEX")
     if [ -z "$ips" ]; then
-        echo "ERROR: Failed to resolve $domain"
+        echo "ERROR: Failed to resolve $domain to any valid IPv4 address"
         exit 1
     fi
     
     while read -r ip; do
-        if [[ ! "$ip" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-            echo "ERROR: Invalid IP from DNS for $domain: $ip"
-            exit 1
+        # Skip empty lines or non-IPv4 entries (defensive check)
+        if [[ -z "$ip" ]] || [[ ! "$ip" =~ $IPV4_REGEX ]]; then
+            echo "WARNING: Skipping non-IPv4 entry for $domain: $ip"
+            continue
         fi
         echo "Adding $ip for $domain"
         ipset add allowed-domains "$ip"

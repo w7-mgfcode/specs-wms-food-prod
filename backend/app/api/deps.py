@@ -1,5 +1,6 @@
 """API dependencies for dependency injection."""
 
+import uuid
 from collections.abc import AsyncGenerator
 from typing import Annotated
 
@@ -62,8 +63,14 @@ async def get_current_user(
     if user_id is None:
         return None
 
+    # Validate user_id is a valid UUID before database query
+    try:
+        user_uuid = uuid.UUID(user_id)
+    except (TypeError, ValueError):
+        return None
+
     # Fetch user from database
-    stmt = select(User).where(User.id == user_id)
+    stmt = select(User).where(User.id == user_uuid)
     result = await db.execute(stmt)
     user = result.scalar_one_or_none()
 

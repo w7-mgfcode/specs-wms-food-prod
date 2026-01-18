@@ -1,7 +1,7 @@
 """User models matching the database schema."""
 
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional
 from uuid import UUID, uuid4
 
@@ -43,7 +43,7 @@ class AuthUser(Base):
     email: Mapped[Optional[str]] = mapped_column(Text, unique=True, nullable=True)
     encrypted_password: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
 
@@ -68,7 +68,7 @@ class User(Base):
         default=UserRole.VIEWER,
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
     last_login: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True

@@ -44,7 +44,8 @@
 
 ## MVP Decision
 
-**Choose: Strangler pattern (side-by-side FastAPI)**
+### Chosen: Strangler pattern (side-by-side FastAPI)
+
 - Lowest risk path with safe refactor constraints.
 - Supports characterization testing and stepwise parity validation.
 - Compatible with Docker-first workflow.

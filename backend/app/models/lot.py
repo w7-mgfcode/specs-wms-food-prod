@@ -1,7 +1,7 @@
 """Lot and genealogy models."""
 
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Optional
 from uuid import UUID, uuid4
@@ -63,7 +63,7 @@ class Lot(Base):
     )
     metadata: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
     # Relationships
@@ -111,7 +111,7 @@ class LotGenealogy(Base):
         Numeric(10, 2), nullable=True
     )
     linked_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
     # Relationships

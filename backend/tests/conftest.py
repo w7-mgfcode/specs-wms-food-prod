@@ -1,8 +1,7 @@
 """Pytest fixtures and configuration."""
 
 import asyncio
-from collections.abc import AsyncGenerator
-from typing import Generator
+from collections.abc import AsyncGenerator, Generator
 
 import pytest
 import pytest_asyncio

@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://admin:password@localhost:5432/flowviz"
 
     # Authentication
-    # NOTE: No default - must be set via environment variable in production
+    # WARNING: Insecure dev default - MUST be overridden via environment variable in production
     secret_key: str = "INSECURE-DEV-ONLY-CHANGE-ME"
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 30

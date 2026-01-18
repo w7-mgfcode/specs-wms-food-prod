@@ -25,7 +25,7 @@ Component library for building React interfaces with Tailwind CSS.
 
 ### Example Usage
 
-```
+```plaintext
 # List available components
 mcp__shadcn__list-components
 
@@ -94,7 +94,7 @@ Browser automation for E2E testing and visual validation.
 
 ### Example Workflow
 
-```
+```plaintext
 # 1. Navigate to app
 mcp__playwright__browser_navigate(url="http://localhost:5173")
 

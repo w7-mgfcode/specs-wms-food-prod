@@ -161,7 +161,7 @@ decision: 'PASS' | 'HOLD' | 'FAIL'
 
 ### Target Project Structure
 
-```
+```plaintext
 backend/
 ├── app/
 │   ├── __init__.py

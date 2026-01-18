@@ -4,7 +4,7 @@ FastAPI backend for the FlowViz Food Production WMS, migrated from Node/Express 
 
 ## Tech Stack
 
-- **Python 3.12+**
+- **Python 3.13+**
 - **FastAPI** - Web framework
 - **SQLAlchemy 2.0** - Async ORM
 - **PostgreSQL 17** - Database
@@ -18,7 +18,7 @@ FastAPI backend for the FlowViz Food Production WMS, migrated from Node/Express 
 
 ### Prerequisites
 
-- Python 3.12+
+- Python 3.13+
 - Docker & Docker Compose
 - uv (recommended) or pip
 
@@ -97,7 +97,7 @@ mypy app/
 
 ## Project Structure
 
-```
+```plaintext
 backend/
 ├── app/
 │   ├── api/

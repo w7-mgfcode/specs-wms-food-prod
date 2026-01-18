@@ -1,7 +1,7 @@
 """Production-related models: Scenario, Stream, Phase, ProductionRun."""
 
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Optional
 from uuid import UUID, uuid4
@@ -44,7 +44,7 @@ class Scenario(Base):
     i18n: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
     # Relationships
@@ -148,7 +148,7 @@ class ProductionRun(Base):
     )
     daily_target_kg: Mapped[Optional[Decimal]] = mapped_column(Numeric, nullable=True)
     started_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
     ended_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True

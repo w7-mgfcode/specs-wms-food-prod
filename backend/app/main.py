@@ -31,10 +31,12 @@ def create_app() -> FastAPI:
     )
 
     # CORS middleware
+    # Note: allow_credentials=True is invalid with allow_origins=["*"]
+    # In debug mode, we use permissive settings without credentials
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"] if settings.debug else ["https://flowviz.example.com"],
-        allow_credentials=True,
+        allow_credentials=not settings.debug,  # False in debug (wildcard), True in prod
         allow_methods=["*"],
         allow_headers=["*"],
     )

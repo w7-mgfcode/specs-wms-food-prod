@@ -12,8 +12,8 @@ services:
       - "5433:5432"  # Use 5433 to avoid conflict with existing postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ../../flow-viz-react/docker/init.sql:/docker-entrypoint-initdb.d/01_init.sql
-      - ../../flow-viz-react/docker/seed_traceability.sql:/docker-entrypoint-initdb.d/02_seed.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/01_init.sql
+      - ./seed_traceability.sql:/docker-entrypoint-initdb.d/02_seed.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin -d flowviz"]
       interval: 5s

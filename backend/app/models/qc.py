@@ -1,7 +1,7 @@
 """QC Gate and Decision models."""
 
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Optional
 from uuid import UUID, uuid4
@@ -97,7 +97,7 @@ class QCDecision(Base):
     )
     digital_signature: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     decided_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
     # Relationships

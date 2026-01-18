@@ -20,7 +20,7 @@ This is a **specification repository** for customizing a Warehouse Management Sy
 
 ### Repository Structure
 
-```
+```plaintext
 specs-wms-food-prod/
 ├── CLAUDE.md                   # This file - AI coding guidance
 ├── README.md                   # Project overview
@@ -79,7 +79,7 @@ specs-wms-food-prod/
 
 Follow this sequence for the Node→FastAPI migration:
 
-```
+```plaintext
 1. BASELINE    → Capture golden outputs (response snapshots)
 2. CHARACTERIZE → Add HTTP-level tests locking in existing behavior
 3. REFACTOR    → Small, SRP-scoped changes
@@ -103,7 +103,7 @@ Follow this sequence for the Node→FastAPI migration:
 
 ### Frontend Architecture (React)
 
-```
+```plaintext
 src/
 ├── components/
 │   ├── auth/           # Authentication components
@@ -121,7 +121,7 @@ src/
 
 ### Backend Architecture (FastAPI Target)
 
-```
+```plaintext
 src/
 ├── main.py             # FastAPI app entry
 ├── config/             # Settings, environment
@@ -337,7 +337,7 @@ def calculate_yield(
 
 ### Lot Types & Lifecycle
 
-```
+```plaintext
 RAW → DEB → BULK → MIX → SKW → FRZ → FG
  │      │      │      │      │      │     │
  ▼      ▼      ▼      ▼      ▼      ▼     ▼
@@ -357,7 +357,7 @@ Receipt Deboned Buffer Mixed  Skewer Frozen Finished
 
 ### Production Phases
 
-```
+```plaintext
 0: START → 1: Receipt → 2: Deboning → 3: Buffer → 4: Mixing →
 5: Skewering → 6: SKU Split → 7: Freezing → 8: Packaging →
 9: Palletizing → 10: Shipment
@@ -456,7 +456,7 @@ CREATE POLICY "Users see own scenario lots" ON lots
 
 ### Branch Hierarchy
 
-```
+```plaintext
 main (production) 🔒
   │
   └── develop (integration) 🔒
@@ -512,7 +512,7 @@ gh pr create --base main --head develop --title "release: vX.Y.Z"
 
 ### RESTful Route Patterns
 
-```python
+```plaintext
 # Collection
 GET    /api/lots              # List lots
 POST   /api/lots              # Create lot
