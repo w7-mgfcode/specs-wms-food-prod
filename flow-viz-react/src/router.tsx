@@ -6,6 +6,7 @@ import { FlowVizV3 } from './pages/FlowVizV3';
 import { Presentation } from './pages/Presentation';
 import { Login } from './pages/Login';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { FirstFlowPage } from './components/flow/FirstFlowPage';
 
 export const router = createHashRouter([
     {
@@ -60,6 +61,10 @@ export const router = createHashRouter([
                     {
                         path: '/presentation',
                         element: <Presentation />,
+                    },
+                    {
+                        path: '/first-flow',
+                        element: <FirstFlowPage />,
                     },
                 ],
             },
