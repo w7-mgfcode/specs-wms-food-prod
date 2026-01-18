@@ -1,9 +1,11 @@
-# Flow-Viz React — Production Traceability System
+# specs-wms-food-prod
 
-[![CI/CD Pipeline](https://github.com/Gabor-SABO_w7.dev/w7-specsWH-DUNA_v2/actions/workflows/run-tests.yml/badge.svg)](https://github.com/Gabor-SABO_w7.dev/w7-specsWH-DUNA_v2/actions/workflows/run-tests.yml)
+> 📋 Food Production WMS Specification & Enterprise System Design
+
+[![CI/CD Pipeline](https://github.com/w7-mgfcode/specs-wms-food-prod/actions/workflows/run-tests.yml/badge.svg)](https://github.com/w7-mgfcode/specs-wms-food-prod/actions/workflows/run-tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A real-time **food production traceability system** designed for manufacturing environments. Built with React 19, TypeScript, Supabase, and Zustand.
+**Specification repository** for customizing a Warehouse Management System (WMS) for Food Production companies. Includes full traceability design, HACCP compliance, lot tracking, QC gates, and audit logging specifications.
 
 ---
 
@@ -30,8 +32,8 @@ A real-time **food production traceability system** designed for manufacturing e
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/Gabor-SABO_w7.dev/w7-specsWH-DUNA_v2.git
-cd w7-specsWH-DUNA_v2/flow-viz-react
+git clone https://github.com/w7-mgfcode/specs-wms-food-prod.git
+cd specs-wms-food-prod/flow-viz-react
 
 # 2. Install dependencies
 npm install
