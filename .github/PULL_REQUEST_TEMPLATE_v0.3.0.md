@@ -44,7 +44,7 @@
 
 ### Tests & Quality
 - [x] **77/77 backend characterization tests passing**
-- [x] **7/7 snapshot tests validated**
+- [x] **7 snapshot tests validated** (5 files with 7 total snapshots)
 - [x] **Docker services deployed successfully**
 - [x] **Performance within targets** (14ms avg for traceability)
 - [ ] **Frontend build validated** (permission issues)
@@ -96,7 +96,7 @@ flowviz_cache         Up (healthy)
 ## 🚀 Deployment Notes
 
 ### Environment Requirements
-- Python 3.13+ (tested with 3.12.3)
+- Python 3.12+ (tested with 3.12.3)
 - Node.js 18+
 - Docker & Docker Compose
 - PostgreSQL 17

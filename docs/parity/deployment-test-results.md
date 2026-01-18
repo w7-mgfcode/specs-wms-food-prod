@@ -52,12 +52,12 @@ flowviz_cache         Up (healthy)   0.0.0.0:6379->6379/tcp
 **Health Endpoint (100 requests):**
 - Total time: ~300ms
 - Average: ~3ms per request
-- Performance: **160% better than P50 target** (3ms vs 5ms target)
+- Performance: 60% of target (40% faster) — 3ms vs 5ms target
 
 **Traceability Endpoint (100 requests):**
 - Total time: ~1,468ms
 - Average: ~14ms per request
-- Performance: **114% better than P50 target** (14ms vs 30ms target)
+- Performance: ~47% of target (~53% faster) — 14ms vs 30ms target
 - Includes: 3 SQL queries per request (central lot + parents + children)
 - Query caching active (cached parameter visible in logs)
 

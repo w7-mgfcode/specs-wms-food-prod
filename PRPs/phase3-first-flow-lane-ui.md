@@ -156,20 +156,18 @@ qcGates:
     name: { hu: "Keverés", en: "Mix" }
   - id: 6
     name: { hu: "Nyárs Mérés", en: "Skewer Weigh" }
-  - id: 6.5
-    name: { hu: "SKU Split", en: "SKU Split" }
   - id: 7
     name: { hu: "Fagyasztás", en: "Freeze" }
   - id: 8
-    name: { hu: "TBD", en: "TBD" }
+    name: { hu: "Csomagolás", en: "Packaging" }
 ```
 
 ### Temperature Badge Rules
 
 ```typescript
 // Temperature status colors based on buffer type
-const getTempStatus = (temp: number, bufferType: string): 'ok' | 'warning' | 'critical' => {
-  if (bufferType === 'FRZ') {
+const getTempStatus = (temp: number, lotType: FlowLotType): 'ok' | 'warning' | 'critical' => {
+  if (lotType === 'FRZ') {
     // Frozen: -25°C to -18°C
     if (temp >= -25 && temp <= -18) return 'ok';
     if (temp > -18 && temp <= -10) return 'warning';
@@ -282,7 +280,7 @@ Task 5 - Create Temperature Badge:
   files:
     - CREATE src/components/flow/TempBadge.tsx
   content:
-    - Props: temperature (number), bufferType (string)
+    - Props: temperature (number), lotType (FlowLotType)
     - Logic: getTempStatus() for color determination
     - Style: Green/yellow/red with thermometer icon
   validation:
@@ -460,7 +458,7 @@ export function LotCard({ lot, lang, onClick, isSelected }: LotCardProps) {
           </span>
         )}
         {lot.temperature_c !== undefined && (
-          <TempBadge temperature={lot.temperature_c} bufferType={lot.bufferId} />
+          <TempBadge temperature={lot.temperature_c} lotType={lot.lotType} />
         )}
       </div>
     </div>

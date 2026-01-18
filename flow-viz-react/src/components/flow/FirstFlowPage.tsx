@@ -228,7 +228,7 @@ function SelectedLotPanel({ lotId, lots, lang, onClose }: SelectedLotPanelProps)
                         <span className="text-[var(--color-text-secondary)]">
                             {lang === 'hu' ? 'Mennyiség' : 'Quantity'}:
                         </span>
-                        <span className="text-white ml-2">{lot.quantity} pcs</span>
+                        <span className="text-white ml-2">{lot.quantity} {lang === 'hu' ? 'db' : 'pcs'}</span>
                     </div>
                 )}
                 {lot.temperature_c !== undefined && (
