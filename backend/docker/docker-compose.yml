@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: flowviz_db_fastapi
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: flowviz
+    ports:
+      - "5433:5432"  # Use 5433 to avoid conflict with existing postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../../flow-viz-react/docker/init.sql:/docker-entrypoint-initdb.d/01_init.sql
+      - ../../flow-viz-react/docker/seed_traceability.sql:/docker-entrypoint-initdb.d/02_seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d flowviz"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - flowviz_net
+
+  valkey:
+    image: valkey/valkey:8-alpine
+    container_name: flowviz_cache
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - flowviz_net
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: flowviz_api_fastapi
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://admin:password@postgres:5432/flowviz
+      - REDIS_URL=redis://valkey:6379/0
+      - SECRET_KEY=dev-secret-key-change-in-production-min-32-chars
+      - JWT_ALGORITHM=HS256
+      - JWT_EXPIRE_MINUTES=30
+      - CELERY_BROKER_URL=redis://valkey:6379/0
+      - CELERY_RESULT_BACKEND=redis://valkey:6379/0
+      - ENVIRONMENT=development
+      - DEBUG=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    networks:
+      - flowviz_net
+
+  celery_worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: flowviz_celery
+    command: celery -A app.tasks worker --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://admin:password@postgres:5432/flowviz
+      - REDIS_URL=redis://valkey:6379/0
+      - SECRET_KEY=dev-secret-key-change-in-production-min-32-chars
+      - CELERY_BROKER_URL=redis://valkey:6379/0
+      - CELERY_RESULT_BACKEND=redis://valkey:6379/0
+    depends_on:
+      - api
+      - valkey
+    networks:
+      - flowviz_net
+
+volumes:
+  postgres_data:
+
+networks:
+  flowviz_net:
+    driver: bridge
