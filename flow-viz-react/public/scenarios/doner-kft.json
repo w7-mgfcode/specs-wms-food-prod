@@ -1,0 +1,517 @@
+{
+    "meta": {
+        "id": "doner-kft",
+        "version": "1.0.0",
+        "title": {
+            "hu": "DÖNER KFT Termelési Folyamat",
+            "en": "DÖNER KFT Production Flow"
+        },
+        "subtitle": {
+            "hu": "Folyamat Vizualizáció & Nyomkövetés",
+            "en": "Process Visualization & Traceability"
+        },
+        "theme": {
+            "streamColors": {
+                "A": "#ff6b9d",
+                "B": "#4a9eff",
+                "C": "#00ff88"
+            },
+            "statusColors": {
+                "pass": "#00ff88",
+                "hold": "#ff8c42",
+                "fail": "#ff4757",
+                "processing": "#4a9eff",
+                "pending": "#6b7a99"
+            }
+        }
+    },
+    "i18n": {
+        "headerTitle": {
+            "hu": "DÖNER KFT Termelési Folyamat",
+            "en": "DÖNER KFT Production Flow"
+        },
+        "headerSubtitle": {
+            "hu": "Folyamat Vizualizáció & Nyomkövetés",
+            "en": "Process Visualization & Traceability"
+        },
+        "tabs": {
+            "flow": {
+                "hu": "Folyamat",
+                "en": "Flow"
+            },
+            "config": {
+                "hu": "Konfiguráció",
+                "en": "Configuration"
+            },
+            "trace": {
+                "hu": "Nyomkövetés",
+                "en": "Traceability"
+            },
+            "sql": {
+                "hu": "SQL Lekérdezések",
+                "en": "SQL Queries"
+            }
+        },
+        "buttons": {
+            "prev": {
+                "hu": "Előző",
+                "en": "Previous"
+            },
+            "next": {
+                "hu": "Következő",
+                "en": "Next"
+            },
+            "auto": {
+                "hu": "Auto",
+                "en": "Auto"
+            },
+            "reset": {
+                "hu": "Reset",
+                "en": "Reset"
+            },
+            "copy": {
+                "hu": "Másolás",
+                "en": "Copy"
+            },
+            "copied": {
+                "hu": "Másolva!",
+                "en": "Copied!"
+            }
+        },
+        "labels": {
+            "qcGate": {
+                "hu": "QC Gate",
+                "en": "QC Gate"
+            },
+            "lots": {
+                "hu": "Érintett LOT-ok",
+                "en": "Related LOTs"
+            }
+        }
+    },
+    "streams": {
+        "A": {
+            "name": {
+                "hu": "🔪 ÁRAM A: Előkészítés",
+                "en": "🔪 STREAM A: Preparation"
+            },
+            "nodes": [
+                {
+                    "phase": 1,
+                    "title": {
+                        "hu": "Átvétel",
+                        "en": "Receipt"
+                    }
+                },
+                {
+                    "phase": 2,
+                    "title": {
+                        "hu": "Csontozás",
+                        "en": "Deboning"
+                    }
+                },
+                {
+                    "phase": 3,
+                    "title": {
+                        "hu": "BULK",
+                        "en": "BULK"
+                    }
+                }
+            ]
+        },
+        "B": {
+            "name": {
+                "hu": "⚙️ ÁRAM B: Termelés",
+                "en": "⚙️ STREAM B: Production"
+            },
+            "nodes": [
+                {
+                    "phase": 4,
+                    "title": {
+                        "hu": "Keverés",
+                        "en": "Mixing"
+                    }
+                },
+                {
+                    "phase": 5,
+                    "title": {
+                        "hu": "Nyársalás",
+                        "en": "Skewering"
+                    }
+                },
+                {
+                    "phase": 6,
+                    "title": {
+                        "hu": "SKU Split",
+                        "en": "SKU Split"
+                    }
+                }
+            ]
+        },
+        "C": {
+            "name": {
+                "hu": "📦 ÁRAM C: Kiszolgálás",
+                "en": "📦 STREAM C: Service"
+            },
+            "nodes": [
+                {
+                    "phase": 7,
+                    "title": {
+                        "hu": "Fagyasztás",
+                        "en": "Freezing"
+                    }
+                },
+                {
+                    "phase": 8,
+                    "title": {
+                        "hu": "Csomagolás",
+                        "en": "Packaging"
+                    }
+                },
+                {
+                    "phase": 9,
+                    "title": {
+                        "hu": "Raklapozás",
+                        "en": "Palletizing"
+                    }
+                },
+                {
+                    "phase": 10,
+                    "title": {
+                        "hu": "Kiszállítás",
+                        "en": "Shipment"
+                    }
+                }
+            ]
+        }
+    },
+    "phases": [
+        {
+            "id": 0,
+            "name": {
+                "hu": "START",
+                "en": "START"
+            },
+            "desc": {
+                "hu": "Termelési nap kezdete - készletek ellenőrzése",
+                "en": "Production day start - inventory check"
+            },
+            "qcGate": null,
+            "lots": [],
+            "stream": null
+        },
+        {
+            "id": 1,
+            "name": {
+                "hu": "ÁTVÉTEL",
+                "en": "RECEIPT"
+            },
+            "desc": {
+                "hu": "Beszállítói húsok átvétele és karantén ellenőrzés (QC Gate #1)",
+                "en": "Supplier meat receipt and quarantine check (QC Gate #1)"
+            },
+            "qcGate": 1,
+            "lots": [
+                "RAW-20260115-DUNA-0101",
+                "RAW-20260115-DUNA-0102"
+            ],
+            "stream": "A"
+        },
+        {
+            "id": 2,
+            "name": {
+                "hu": "CSONTOZÁS",
+                "en": "DEBONING"
+            },
+            "desc": {
+                "hu": "Csontos húsok feldolgozása és frakciók szétválasztása (QC Gate #3)",
+                "en": "Bone-in meat processing and fraction separation (QC Gate #3)"
+            },
+            "qcGate": 3,
+            "lots": [
+                "DEB-20260115-DUNA-0001",
+                "DEB-20260115-DUNA-0002"
+            ],
+            "stream": "A"
+        },
+        {
+            "id": 3,
+            "name": {
+                "hu": "BULK PUFFER",
+                "en": "BULK BUFFER"
+            },
+            "desc": {
+                "hu": "Feldolgozott húsfrakciók tárolása konténerben 0-4°C-on (QC Gate #4)",
+                "en": "Processed meat fractions storage in containers at 0-4°C (QC Gate #4)"
+            },
+            "qcGate": 4,
+            "lots": [
+                "BULK-20260115-DUNA-5101",
+                "BULK-20260115-DUNA-5102"
+            ],
+            "stream": "A"
+        },
+        {
+            "id": 4,
+            "name": {
+                "hu": "KEVERÉS",
+                "en": "MIXING"
+            },
+            "desc": {
+                "hu": "Mai MIXLOT előállítása recept szerint, fűszerezés (QC Gate #5)",
+                "en": "Today's MIXLOT production per recipe, seasoning (QC Gate #5)"
+            },
+            "qcGate": 5,
+            "lots": [
+                "MIXLOT-20260115-DUNA-0001"
+            ],
+            "stream": "B"
+        },
+        {
+            "id": 5,
+            "name": {
+                "hu": "NYÁRSALÁS",
+                "en": "SKEWERING"
+            },
+            "desc": {
+                "hu": "Folyamatos nyársalás rúd-szintű méréssel és korrekcióval (QC Gate #6)",
+                "en": "Continuous skewering with rod-level weighing and correction (QC Gate #6)"
+            },
+            "qcGate": 6,
+            "lots": [
+                "SKW15-20260115-DUNA-0001",
+                "SKW30-20260115-DUNA-0001"
+            ],
+            "stream": "B"
+        },
+        {
+            "id": 6,
+            "name": {
+                "hu": "SKU SPLIT",
+                "en": "SKU SPLIT"
+            },
+            "desc": {
+                "hu": "15kg és 30kg rudak fizikai elkülönítése külön kocsin (QC Gate #6.5)",
+                "en": "15kg and 30kg rods physical separation on separate carts (QC Gate #6.5)"
+            },
+            "qcGate": 6.5,
+            "lots": [
+                "SKW15 buffer",
+                "SKW30 buffer"
+            ],
+            "stream": "B"
+        },
+        {
+            "id": 7,
+            "name": {
+                "hu": "FAGYASZTÁS",
+                "en": "FREEZING"
+            },
+            "desc": {
+                "hu": "SKU LOCK: 1 ciklus = 1 súly, külön FRZ15/FRZ30 ciklusok (QC Gate #7 - CCP)",
+                "en": "SKU LOCK: 1 cycle = 1 weight, separate FRZ15/FRZ30 cycles (QC Gate #7 - CCP)"
+            },
+            "qcGate": 7,
+            "lots": [
+                "FRZ15-20260115-DUNA-0001",
+                "FRZ30-20260115-DUNA-0001"
+            ],
+            "stream": "C"
+        },
+        {
+            "id": 8,
+            "name": {
+                "hu": "CSOMAGOLÁS",
+                "en": "PACKAGING"
+            },
+            "desc": {
+                "hu": "Fagyasztott rudak csomagolása, címkézés és QC ellenőrzés (QC Gate #8)",
+                "en": "Frozen rods packaging, labeling and QC check (QC Gate #8)"
+            },
+            "qcGate": 8,
+            "lots": [
+                "FG15-20260115-DUNA-0001",
+                "FG30-20260115-DUNA-0001"
+            ],
+            "stream": "C"
+        },
+        {
+            "id": 9,
+            "name": {
+                "hu": "RAKLAPOZÁS",
+                "en": "PALLETIZING"
+            },
+            "desc": {
+                "hu": "Vevői raklapok kialakítása SSCC címkével és aggregációval",
+                "en": "Customer pallets formation with SSCC label and aggregation"
+            },
+            "qcGate": 8,
+            "lots": [
+                "PAL15-20260115-A-0001",
+                "PAL30-20260115-B-0001"
+            ],
+            "stream": "C"
+        },
+        {
+            "id": 10,
+            "name": {
+                "hu": "KISZÁLLÍTÁS",
+                "en": "SHIPMENT"
+            },
+            "desc": {
+                "hu": "Kiszállítás vevőhöz teljes nyomkövetési dokumentációval",
+                "en": "Delivery to customer with complete traceability documentation"
+            },
+            "qcGate": null,
+            "lots": [
+                "SHIPMENT-20260115-DUNA-0001"
+            ],
+            "stream": "C"
+        }
+    ],
+    "config": {
+        "operational": {
+            "mode": {
+                "hu": "Nagyüzemi B2B, folyamatos WIP",
+                "en": "Large-scale B2B, continuous WIP"
+            },
+            "shift": {
+                "hu": "06:00–18:00 (12 óra)",
+                "en": "06:00–18:00 (12 hours)"
+            },
+            "throughput": {
+                "hu": "≥ 1000 kg/nap (nettó)",
+                "en": "≥ 1000 kg/day (net)"
+            },
+            "product": {
+                "hu": "Fagyasztott Chicken Kebab rúd",
+                "en": "Frozen Chicken Kebab rod"
+            },
+            "skus": {
+                "hu": "15 kg és 30 kg",
+                "en": "15 kg and 30 kg"
+            },
+            "target": {
+                "hu": "15kg: 40db=600kg | 30kg: 15db=450kg",
+                "en": "15kg: 40pcs=600kg | 30kg: 15pcs=450kg"
+            }
+        },
+        "hardRules": [
+            {
+                "num": 1,
+                "text": {
+                    "hu": "Csontozás folyamatos → FIL* → BULK puffer",
+                    "en": "Continuous deboning → FIL* → BULK buffer"
+                }
+            },
+            {
+                "num": 2,
+                "text": {
+                    "hu": "Nyárs folyamatos → rúd-szintű mérleg + korrekció + QC döntés",
+                    "en": "Continuous skewering → rod-level scale + correction + QC decision"
+                }
+            },
+            {
+                "num": 3,
+                "text": {
+                    "hu": "5–6-ban tegnapi MIX TILOS (csak aznapi MIXLOT)",
+                    "en": "Yesterday's MIX FORBIDDEN in steps 5-6 (today's MIXLOT only)"
+                }
+            },
+            {
+                "num": 4,
+                "text": {
+                    "hu": "Backlog csak 7-ben és SKU-azonosan (pl. tegnapi SKW30 csak FRZ30 ciklusba)",
+                    "en": "Backlog only in step 7 and SKU-matched (e.g., yesterday's SKW30 only in FRZ30 cycle)"
+                }
+            },
+            {
+                "num": 5,
+                "text": {
+                    "hu": "Sokkoló: 1 ciklus = 1 súly (SKU LOCK) → külön FRZ15/FRZ30, keverés nélkül",
+                    "en": "Freezing: 1 cycle = 1 weight (SKU LOCK) → separate FRZ15/FRZ30, no mixing"
+                }
+            }
+        ],
+        "qcGates": [
+            {
+                "id": 1,
+                "name": {
+                    "hu": "Receipt",
+                    "en": "Receipt"
+                },
+                "type": "oPRP"
+            },
+            {
+                "id": 3,
+                "name": {
+                    "hu": "Deboning",
+                    "en": "Deboning"
+                },
+                "type": "oPRP"
+            },
+            {
+                "id": 4,
+                "name": {
+                    "hu": "BULK readiness",
+                    "en": "BULK readiness"
+                },
+                "type": "oPRP"
+            },
+            {
+                "id": 5,
+                "name": {
+                    "hu": "Mix",
+                    "en": "Mix"
+                },
+                "type": "oPRP"
+            },
+            {
+                "id": 6,
+                "name": {
+                    "hu": "Skewer weigh",
+                    "en": "Skewer weigh"
+                },
+                "type": "oPRP"
+            },
+            {
+                "id": 6.5,
+                "name": {
+                    "hu": "SKU split",
+                    "en": "SKU split"
+                },
+                "type": "oPRP"
+            },
+            {
+                "id": 7,
+                "name": {
+                    "hu": "Freeze",
+                    "en": "Freeze"
+                },
+                "type": "CCP/oPRP"
+            },
+            {
+                "id": 8,
+                "name": {
+                    "hu": "Final release",
+                    "en": "Final release"
+                },
+                "type": "oPRP"
+            }
+        ],
+        "temps": {
+            "rawProcessing": {
+                "hu": "0–4°C (max 7°C pillanatnyi)",
+                "en": "0–4°C (max 7°C momentary)"
+            },
+            "freezerCabin": {
+                "hu": "-35…-40°C",
+                "en": "-35…-40°C"
+            },
+            "coreTemp": {
+                "hu": "≤ -18°C",
+                "en": "≤ -18°C"
+            }
+        }
+    }
+}

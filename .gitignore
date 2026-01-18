@@ -1,0 +1,392 @@
+# ==============================================================================
+# OS Generated Files
+# ==============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+*.bak
+*.tmp
+*.temp
+
+# Windows
+*.lnk
+$RECYCLE.BIN/
+
+# Linux
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ==============================================================================
+# Editor / IDE (VS Code, JetBrains, Vim, Emacs, Sublime, etc.)
+# ==============================================================================
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/snippets/
+*.code-workspace
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+.idea_modules/
+
+# Vim
+*.swp
+*.swo
+*~
+Session.vim
+.netrwhist
+tags
+*.un~
+
+# Emacs
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Sublime Text
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+
+# ==============================================================================
+# Node.js / JavaScript / TypeScript
+# ==============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+*.tsbuildinfo
+.npm/
+.eslintcache
+.stylelintcache
+.yarn/
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+lerna-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+.output/
+.vercel/
+.cache/
+*.js.map
+*.d.ts.map
+.turbo/
+
+# ==============================================================================
+# Python
+# ==============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+venv_linux/
+venv_windows/
+.venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+.eggs/
+*.egg-info/
+*.egg
+*.manifest
+*.spec
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.mypy_cache/
+.ruff_cache/
+.pytype/
+cython_debug/
+pip-log.txt
+pip-delete-this-directory.txt
+.python-version
+.pdm.toml
+.pdm-python
+.pdm-build/
+Pipfile.lock
+poetry.lock
+pyrightconfig.json
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+profile_default/
+ipython_config.py
+
+# ==============================================================================
+# Environment & Secrets (CRITICAL - NEVER COMMIT)
+# ==============================================================================
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+!.env.template
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+credentials.json
+token.json
+google-credentials/
+secrets/
+*.secret
+.secrets/
+.credentials/
+**/secrets/**
+**/credentials/**
+*.gpg
+*.asc
+service-account*.json
+firebase-adminsdk*.json
+gcloud-service-key.json
+
+# API Keys (common patterns)
+*api_key*
+*apikey*
+*api-key*
+*.keystore
+keystore.properties
+
+# ==============================================================================
+# Testing
+# ==============================================================================
+test-results/
+playwright-report/
+playwright/.cache/
+coverage/
+.nyc_output/
+junit.xml
+*.lcov
+*.xml
+!pom.xml
+!*.config.xml
+e2e-results/
+screenshots/
+videos/
+
+# ==============================================================================
+# Docker
+# ==============================================================================
+*.log
+docker-compose.override.yml
+docker-compose.*.local.yml
+.docker/
+
+# ==============================================================================
+# Terraform / Infrastructure
+# ==============================================================================
+.terraform/
+.terraform.*
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Pulumi
+Pulumi.*.yaml
+!Pulumi.yaml
+
+# AWS
+.aws/
+aws-credentials
+
+# ==============================================================================
+# AI / ML Tools & Agents
+# ==============================================================================
+.langgraph_api/
+.claude/
+.windsurfrules
+.cursor/
+.aider*
+.copilot/
+.codeium/
+.tabnine/
+.kite/
+*.onnx
+*.pt
+*.pth
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+model_cache/
+models/
+!models/.gitkeep
+embeddings_cache/
+vector_store/
+chromadb/
+.chroma/
+faiss_index/
+*.faiss
+
+# ==============================================================================
+# Database
+# ==============================================================================
+*.sqlite
+*.sqlite3
+*.db
+*.sql.gz
+*.sql.bz2
+*.dump
+*.pgdump
+data/
+!data/.gitkeep
+*.csv
+!**/fixtures/*.csv
+!**/seed/*.csv
+redis-data/
+postgres-data/
+mysql-data/
+mongo-data/
+
+# ==============================================================================
+# Project Specific
+# ==============================================================================
+rag-documents/
+frontend-env.env
+agent-api-env.env
+rag-pipeline-env.env
+
+# ==============================================================================
+# Logs, Temp & Cache Files
+# ==============================================================================
+logs/
+*.log
+tmp/
+temp/
+.cache/
+.temp/
+.tmp/
+*.bak
+*.backup
+*.orig
+debug.log
+error.log
+combined.log
+
+# ==============================================================================
+# Archives & Large Files
+# ==============================================================================
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+*.tgz
+*.bz2
+*.xz
+*.lz
+*.lzma
+*.lzo
+*.z
+*.Z
+*.war
+*.ear
+
+# ==============================================================================
+# Media Files (uncomment if not needed in repo)
+# ==============================================================================
+# *.jpg
+# *.jpeg
+# *.png
+# *.gif
+# *.ico
+# *.pdf
+# *.mp4
+# *.mp3
+# *.wav
+# *.avi
+# *.mov
+# *.wmv
+# *.flv
+# *.webm
+# *.mkv
+# *.ogg
+# *.webp
+# *.svg
+
+# ==============================================================================
+# Documentation Builds
+# ==============================================================================
+docs/_build/
+site/
+.docusaurus/
+.vitepress/cache/
+.vitepress/dist/
+*.epub
+*.mobi
+
+# ==============================================================================
+# Misc
+# ==============================================================================
+*.patch
+*.diff
+.history/
+.ionide/
+.metals/
+.bloop/
+.ammonite/
+project/metals.sbt
+.scala-build/
+===
+# Logs & Temp Files
+# ==============================================================================
+logs/
+*.log
+tmp/
+temp/
+.cache/

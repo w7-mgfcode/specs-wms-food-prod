@@ -1,0 +1,198 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==================== CSS VARIABLES (from original HTML) ==================== */
+:root {
+  /* Shell colors (index.html) */
+  --shell-bg-dark: #0a0f1e;
+  --shell-bg-medium: #1a2332;
+  --shell-nav-bg: #1e2a3f;
+  --shell-accent-cyan: #00d9ff;
+  --shell-accent-blue: #4a9eff;
+  --shell-accent-green: #00ff88;
+  --shell-text-primary: #f1f5f9;
+  --shell-text-secondary: #94a3b8;
+  --shell-text-muted: #6b7a99;
+  --shell-border: #2a3f5f;
+  --shell-hover: rgba(74, 158, 255, 0.1);
+  --shell-active: rgba(74, 158, 255, 0.3);
+
+  /* Page colors (flow-viz, presentation) */
+  --color-bg-dark: #0a0e27;
+  --color-bg-medium: #1a1f3a;
+  --color-bg-light: #2a3352;
+  --color-accent-blue: #4a9eff;
+  --color-accent-cyan: #00d9ff;
+  --color-accent-green: #00ff88;
+  --color-accent-orange: #ff8c42;
+  --color-accent-red: #ff4757;
+  --color-accent-yellow: #ffd93d;
+  --color-accent-purple: #a55eea;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #b8c5db;
+  --color-text-muted: #6b7a99;
+
+  /* Stream colors */
+  --stream-a-color: #ff6b9d;
+  --stream-b-color: #4a9eff;
+  --stream-c-color: #00ff88;
+
+  /* Status colors */
+  --status-pass: #00ff88;
+  --status-hold: #ff8c42;
+  --status-fail: #ff4757;
+  --status-processing: #4a9eff;
+  --status-pending: #6b7a99;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Typography */
+  --font-mono: 'Courier New', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ==================== BASE STYLES ==================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--shell-border) var(--shell-bg-dark);
+}
+
+body {
+  font-family: var(--font-sans);
+  background: linear-gradient(135deg, var(--shell-bg-dark) 0%, var(--shell-bg-medium) 100%);
+  color: var(--shell-text-primary);
+  min-height: 100vh;
+}
+
+/* ==================== SCROLLBAR ==================== */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--shell-bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--shell-border);
+  border-radius: 5px;
+  border: 2px solid var(--shell-bg-dark);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--shell-accent-blue);
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px currentColor;
+  }
+
+  50% {
+    box-shadow: 0 0 40px currentColor;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes flow {
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: 30px 0;
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin 2s linear infinite;
+}
+
+.animate-flow {
+  animation: flow 2s linear infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* ==================== GLASSMORPHISM ==================== */
+.glass-card {
+  background: rgba(26, 31, 58, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(74, 158, 255, 0.3);
+  border-radius: 12px;
+}
+
+.glass-header {
+  background: rgba(26, 31, 58, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 2px solid var(--shell-accent-cyan);
+}

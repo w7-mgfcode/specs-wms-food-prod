@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: flowviz_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: flowviz
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    networks:
+      - flowviz_net
+
+  # Backend API
+  api:
+    build: ./server
+    container_name: flowviz_api
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://admin:password@postgres:5432/flowviz
+    depends_on:
+      - postgres
+    networks:
+      - flowviz_net
+
+  # Frontend (Static File Server)
+  web:
+    build: .
+    container_name: flowviz_web
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    networks:
+      - flowviz_net
+
+  # Optional: PGAdmin for UI management
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: flowviz_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@flowviz.com
+      PGADMIN_DEFAULT_PASSWORD: password
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - flowviz_net
+
+volumes:
+  postgres_data:
+
+
+networks:
+  flowviz_net:
+    driver: bridge
