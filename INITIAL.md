@@ -3,12 +3,12 @@
 ## Constraints + Examples
 
 ### Constraints
-- **Tech stack** must match the preferred list:
-  - Python 3.13+, FastAPI 0.125.0, SQLAlchemy 2.0.45 (async), Pydantic 2.11+, PostgreSQL 17.7, Valkey 8.1, Alembic 1.14+, Celery 5.4+, asyncpg (latest), bcrypt 4.x, python-jose (latest).
+- **Tech stack** must match the preferred list (minimums/compatible ranges):
+  - Python 3.13+, FastAPI >=0.125, SQLAlchemy 2.0.x (async), Pydantic 2.11+, PostgreSQL 17.x, Valkey 8.1+, Alembic 1.14+, Celery 5.4+, asyncpg (latest), bcrypt 4.x, python-jose (latest).
 - **Docker-first** workflow: services should run in containers and support side-by-side validation.
 - **Safe refactor** workflow:
   - Baseline snapshot tests (golden output).
-  - Add characterization tests (ha nincs).
+  - Add characterization tests (if missing).
   - Refactor in small SRP steps.
   - Validate after each step.
   - Remove dead code + simplify.
@@ -52,7 +52,7 @@
 ## Milestones
 
 1. **M0: Foundations**
-   - Docker compose with FastAPI + Postgres 17.7 + Valkey.
+   - Docker Compose with FastAPI + Postgres 17.x + Valkey.
    - Health endpoint parity and environment configuration.
 2. **M1: Data layer**
    - SQLAlchemy async models and session management.
@@ -76,7 +76,7 @@
 - **Per milestone**:
   - Characterization tests pass.
   - Response payloads unchanged (or explicitly documented and approved).
-  - Docker compose up/down cleanly.
+  - Docker Compose up/down cleanly.
   - Performance does not regress beyond agreed thresholds.
 - **Final**:
   - Coverage target met.
@@ -84,9 +84,9 @@
 
 ## Final Spec (Deliverables)
 
-- Docker compose with:
+- Docker Compose with:
   - FastAPI app (Python 3.13)
-  - PostgreSQL 17.7
+  - PostgreSQL 17.x
   - Valkey 8.1
 - FastAPI backend with async SQLAlchemy models and Pydantic schemas.
 - Alembic migrations aligned to the existing database.

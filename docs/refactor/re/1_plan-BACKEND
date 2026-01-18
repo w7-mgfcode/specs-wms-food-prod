@@ -1,16 +1,16 @@
 # Backend Refactor Plan (Safe Refactor)
 
 ## Goals
-- Migrate the backend to the preferred stack (Python 3.13+, FastAPI, SQLAlchemy async, PostgreSQL 17.7, Valkey, Celery).
+- Migrate the backend to the preferred stack (Python 3.13+, FastAPI >=0.125, SQLAlchemy 2.0.x async, PostgreSQL 17.x, Valkey 8.1+, Celery 5.4+).
 - Ensure a safe, incremental refactor with characterization tests and validation after each step.
 - Maintain backward compatibility for existing API behavior during the transition.
 
 ## Target Tech Stack
 - **Runtime:** Python 3.13+
-- **Web framework:** FastAPI 0.125.0
-- **ORM:** SQLAlchemy 2.0.45 (async)
+- **Web framework:** FastAPI >=0.125
+- **ORM:** SQLAlchemy 2.0.x (async)
 - **Validation:** Pydantic 2.11+ (use `@field_validator`)
-- **Database:** PostgreSQL 17.7 (JSONB, RLS if needed)
+- **Database:** PostgreSQL 17.x (JSONB, RLS if needed)
 - **Cache:** Valkey 8.1 (Redis-compatible)
 - **Migrations:** Alembic 1.14+
 - **Tasks:** Celery 5.4+
@@ -31,7 +31,7 @@
 ## Docker-First Plan
 - Add Docker services for:
   - **FastAPI app** (Python 3.13)
-  - **PostgreSQL 17.7**
+  - **PostgreSQL 17.x**
   - **Valkey 8.1**
 - Keep current containers running during transition to enable side-by-side validation.
 - Provide a `.env` contract shared by old and new services.
@@ -40,7 +40,7 @@
 1. **Baseline**
    - Capture current API outputs and response shapes (golden outputs/snapshots).
    - Record performance baselines (latency for common endpoints).
-2. **Characterization Tests (ha nincs)**
+2. **Characterization Tests (if missing)**
    - Add HTTP-level tests that lock in existing behavior.
    - Validate error responses and edge cases (invalid login, missing lot, etc.).
 3. **Refactor in Small Steps (SRP)**
@@ -100,10 +100,10 @@
 - [ ] All characterization tests pass
 - [ ] Response payloads unchanged (or explicitly documented)
 - [ ] Performance baseline not degraded beyond agreed threshold
-- [ ] Docker compose up/down cleanly
+- [ ] Docker Compose up/down cleanly
 
 ## Deliverables
-- Docker compose for FastAPI + Postgres + Valkey
+- Docker Compose for FastAPI + Postgres + Valkey
 - FastAPI backend with async SQLAlchemy models
 - Alembic migrations and versioning
 - Characterization tests and API snapshots
