@@ -23,38 +23,29 @@ This phase focuses on the **first production flow** using realistic buffer confi
 
 ## Changes Breakdown
 
-### 📁 New Files Created (11 files)
+### New Files Created (8 files)
 
 | File | Lines | Purpose |
 |------|-------|---------|
 | **Type Definitions** |
-| `flow-viz-react/src/types/flow.ts` | ~50 | TypeScript interfaces for BufferLot, Buffer, FlowState |
+| `flow-viz-react/src/types/flow.ts` | 75 | TypeScript interfaces for BufferConfig, FlowLot, FlowGate, getTempStatus |
 | **State Management** |
-| `flow-viz-react/src/stores/useFlowStore.ts` | ~90 | Zustand store for buffer lanes and gate progression |
+| `flow-viz-react/src/stores/useFlowStore.ts` | 127 | Zustand store for buffer lanes, lots, and gate progression |
 | **UI Components** |
-| `flow-viz-react/src/components/flow/BufferLane.tsx` | ~80 | Lane component with temperature and capacity display |
-| `flow-viz-react/src/components/flow/LotCard.tsx` | ~60 | Individual lot card with weight, temp, type badge |
-| `flow-viz-react/src/components/flow/TempBadge.tsx` | ~40 | Temperature indicator with color coding |
-| `flow-viz-react/src/components/flow/GateStepper.tsx` | ~70 | Horizontal stepper for 8 QC gates |
-| `flow-viz-react/src/components/flow/FirstFlowPage.tsx` | ~150 | Main page orchestrating all components |
+| `flow-viz-react/src/components/flow/BufferLane.tsx` | 63 | Lane component with temperature range and lot count display |
+| `flow-viz-react/src/components/flow/LotCard.tsx` | 81 | Memoized lot card with weight, temp badge, QC status border |
+| `flow-viz-react/src/components/flow/TempBadge.tsx` | 33 | Temperature indicator with ok/warning/critical color coding |
+| `flow-viz-react/src/components/flow/GateStepper.tsx` | 84 | Horizontal stepper for 7 QC gates with active/completed states |
+| `flow-viz-react/src/components/flow/FirstFlowPage.tsx` | 210 | Main page with gate controls, buffer lanes, selected lot panel |
 | **Configuration** |
-| `flow-viz-react/public/scenarios/first-flow-config.json` | ~180 | Seed data with 4 buffers, 11 lots, realistic weights/temps |
-| **Documentation** |
-| `docs/refactor/re/phase-3_first-flow.md` | 192 | Phase 3 specification and analysis |
-| `PRPs/phase3-first-flow-lane-ui.md` | ~400 | Complete PRP with ANALYZE-BRAINSTORM-DECIDE-IMPLEMENT |
+| `flow-viz-react/public/scenarios/first-flow-config.json` | 207 | Seed data with 4 buffers, 8 lots, 7 gates |
 
-### 📝 Files Modified (2 files)
+### Files Modified (2 files)
 
 | File | Changes | Purpose |
 |------|---------|---------|
 | `flow-viz-react/src/router.tsx` | +1 route | Added `/first-flow` route to app router |
 | `flow-viz-react/src/components/shell/ShellNav.tsx` | +1 nav item | Added "First Flow (V4)" navigation tab |
-
-### 🗑️ Files Removed (1 file)
-
-| File | Reason |
-|------|--------|
-| `docs/phase-3_first-flow.md` | Moved to `docs/refactor/re/phase-3_first-flow.md` |
 
 ---
 
@@ -74,12 +65,14 @@ This phase focuses on the **first production flow** using realistic buffer confi
 - Lot cards with individual weight, temp, and type
 - Empty state message when no lots present
 
-### QC Gate Flow (8 Gates)
+### QC Gate Flow (7 Gates)
 
 ```
-Gate 1: Receipt → Gate 3: Deboning → Gate 4: BULK Ready → Gate 5: Mix 
-    → Gate 6: Skewer Weigh → Gate 6.5: SKU Split → Gate 7: Freeze → Gate 8: Package
+Gate 1: Receipt → Gate 3: Deboning → Gate 4: BULK Ready → Gate 5: Mix
+    → Gate 6: Skewer Weigh → Gate 7: Freeze → Gate 8: Packaging
 ```
+
+Note: Gate numbering follows production floor conventions (Gate 2 reserved for future expansion).
 
 **Stepper Features:**
 - Active gate highlighting
@@ -100,10 +93,15 @@ Gate 1: Receipt → Gate 3: Deboning → Gate 4: BULK Ready → Gate 5: Mix
 ### State Management
 
 **Zustand Store (`useFlowStore`):**
-- `buffers`: Array of 4 buffer configurations with lots
-- `activeGate`: Current QC gate (1-8)
+- `buffers`: Record of 4 buffer configurations with lots
+- `lots`: Array of FlowLot objects with buffer associations
+- `gates`: Array of 7 QC gates (1, 3, 4, 5, 6, 7, 8)
+- `activeGateId`: Current active gate ID
+- `selectedLotId`: Currently selected lot for detail view
 - `setActiveGate()`: Navigate between gates
-- `loadMockData()`: Initialize from JSON config
+- `advanceGate()`: Move to next gate in sequence
+- `resetGates()`: Reset all gates to initial state
+- `loadFlowConfig()`: Initialize from JSON config
 
 ---
 
@@ -111,28 +109,42 @@ Gate 1: Receipt → Gate 3: Deboning → Gate 4: BULK Ready → Gate 5: Mix
 
 ### Type Safety
 
-**TypeScript Interfaces:**
+**TypeScript Interfaces (from `src/types/flow.ts`):**
 ```typescript
-interface BufferLot {
-  code: string;
-  weight_kg: number;
-  temperature_c: number;
-  type: 'RAW' | 'BULK' | 'MIX' | 'SKW';
-}
+// Lot type enum matching database schema
+type FlowLotType = 'RAW' | 'DEB' | 'BULK' | 'MIX' | 'SKW' | 'FRZ' | 'FG';
 
-interface Buffer {
+// Buffer configuration for lane rendering
+interface BufferConfig {
   id: string;
-  name: string;
-  targetTemp: string;
-  lots: BufferLot[];
+  name: LocalizedString;
+  tempRange: string;
+  lotType: FlowLotType;
+  color: string;
 }
 
-interface FlowState {
-  buffers: Buffer[];
-  activeGate: number;
-  setActiveGate: (gate: number) => void;
-  loadMockData: () => void;
+// Lot card data for rendering
+interface FlowLot {
+  id: string;
+  code: string;
+  description: LocalizedString;
+  weight_kg?: number;
+  quantity?: number;
+  temperature_c?: number;
+  qcStatus: NodeStatus;
+  bufferId: string;
 }
+
+// QC Gate for stepper
+interface FlowGate {
+  id: number | string;
+  name: LocalizedString;
+  isActive: boolean;
+  isCompleted: boolean;
+}
+
+// Temperature status for badge coloring
+type TempStatus = 'ok' | 'warning' | 'critical';
 ```
 
 ### Component Architecture
@@ -162,20 +174,20 @@ FirstFlowPage (Layout & Orchestration)
 
 **Location:** `flow-viz-react/public/scenarios/first-flow-config.json`
 
-**11 Lots Configured:**
+**8 Lots Configured:**
 
-| Buffer | Lot Code | Type | Weight (kg) | Temp (°C) | Count |
-|--------|----------|------|-------------|-----------|-------|
-| LK | BULK-20260114-DUNA-5001 | RAW | 200 | 2.0 | — |
-| LK | BULK-20260114-DUNA-5002 | RAW | 30 | 1.5 | — |
-| LK | BULK-20260114-DUNA-5003 | RAW | 120 | 2.5 | — |
-| MIX | MIXLOT-20260115-DUNA-0001 | MIX | 1070 | 3.0 | — |
-| SKW15 | SKW15-20260115-DUNA-0001 | SKW | 300 | 1.0 | 20 pcs |
-| SKW15 | SKW15-20260115-DUNA-0002 | SKW | 300 | 1.0 | 20 pcs |
-| SKW30 | SKW30-20260115-DUNA-0001 | SKW | 240 | 0.5 | 8 pcs |
-| SKW30 | SKW30-20260115-DUNA-0002 | SKW | 210 | 0.5 | 7 pcs |
+| Buffer | Lot Code | Description | Weight (kg) | Temp (°C) | Qty | Status |
+|--------|----------|-------------|-------------|-----------|-----|--------|
+| LK | BULK-20260114-DUNA-5001 | Breast/Mell | 200 | 3.2 | — | pass |
+| LK | BULK-20260114-DUNA-5002 | Skin/Bor | 30 | 2.8 | — | pass |
+| LK | BULK-20260114-DUNA-5003 | Thigh Fillet/Combfile | 120 | 3.5 | — | processing |
+| MIX | MIXLOT-20260115-DUNA-0001 | Today's Mix/Mai Mix | 1070 | 2.5 | — | pass |
+| SKW15 | SKW15-20260115-DUNA-0001 | 15kg rods | — | 3.0 | 20 pcs | pass |
+| SKW15 | SKW15-20260115-DUNA-0002 | 15kg rods | — | 3.1 | 20 pcs | pending |
+| SKW30 | SKW30-20260115-DUNA-0001 | 30kg rods | — | 2.9 | 8 pcs | pass |
+| SKW30 | SKW30-20260115-DUNA-0002 | 30kg rods | — | 5.2 | 7 pcs | hold |
 
-**Total Capacity:** 2,470 kg across 4 buffers
+**Total:** 8 lots across 4 buffers (1,420 kg weight + 55 pcs quantity)
 
 ---
 
@@ -339,9 +351,9 @@ Phase 3 successfully delivers an **interactive, lane-based production flow visua
 The feature is **production-ready** for mock data usage and **backend-integration-ready** for connecting to the FastAPI endpoints delivered in Phase 1 and Phase 2.
 
 **Total Implementation:**
-- **11 new files** created
+- **8 new files** created (~880 lines)
 - **2 files** modified
-- **~900 lines** of production code
-- **TypeScript validated** ✅
-- **Role-based access** ✅
-- **Responsive design** ✅
+- **TypeScript validated**
+- **Role-based access** (OPERATOR/MANAGER/ADMIN can interact)
+- **Responsive design** (mobile-friendly stepper and lane layout)
+- **Localization ready** (Hungarian/English support)

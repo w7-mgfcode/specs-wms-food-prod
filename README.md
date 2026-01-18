@@ -11,7 +11,19 @@
 
 ---
 
-## 🆕 What's New (v0.2.0)
+## What's New (v0.3.0)
+
+- **First Flow (V4)** — Interactive lane-based production flow visualization
+- **Buffer Lane UI** — 4 buffer zones (LK, MIX, SKW15, SKW30) with real-time lot tracking
+- **QC Gate Stepper** — 7-gate progression from Receipt to Packaging
+- **Flow Store** — New Zustand store for flow state management
+- **Temperature Badges** — Color-coded temperature status indicators
+- See [Phase 3 Summary](docs/phase/phase-3_first-flow.md) for details
+
+### Previous Releases
+
+<details>
+<summary>v0.2.0 - Backend Migration Foundation</summary>
 
 - **FastAPI Backend** — Python 3.13+ backend scaffold for Node/Express migration
 - **CLAUDE.md** — Comprehensive AI coding guidance (674 lines)
@@ -19,13 +31,17 @@
 - **Characterization Tests** — API parity test framework
 - See [Phase 1 Summary](docs/phase/phase-1_backend.md) for details
 
+</details>
+
 ---
 
-## 🏭 Features
+## Features
 
 - **Real-time Flow Visualization** — Track production across 3 parallel streams (A, B, C)
+- **First Flow (V4)** — Lane-based buffer visualization with QC gate progression (NEW)
 - **Lot Traceability** — Full parent/child genealogy with weight and temperature tracking
 - **QC Gates** — Quality control checkpoints with PASS/HOLD/FAIL decisions and CCP support
+- **Temperature Monitoring** — Color-coded badges with ok/warning/critical thresholds
 - **Role-Based Access Control** — ADMIN, MANAGER, AUDITOR, OPERATOR, VIEWER roles
 - **Multi-Language Support** — Hungarian (hu) and English (en)
 - **Production Run Management** — Start/stop runs, auto-registration, summaries
@@ -90,16 +106,16 @@ uv run uvicorn app.main:app --reload --port 8000
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                        Frontend (React 19)                               │
-│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────────────┐             │
-│  │Dashboard│  │ Command │  │Validator│  │  Presentation   │             │
-│  │  (V1)   │  │  (V2)   │  │  (V3)   │  │     Mode        │             │
-│  └────┬────┘  └────┬────┘  └────┬────┘  └────────┬────────┘             │
-│       └────────────┴────────────┴────────────────┘                      │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌──────────┐  ┌─────────────┐  │
+│  │Dashboard│  │ Command │  │Validator│  │First Flow│  │ Presentation│  │
+│  │  (V1)   │  │  (V2)   │  │  (V3)   │  │   (V4)   │  │    Mode     │  │
+│  └────┬────┘  └────┬────┘  └────┬────┘  └────┬─────┘  └──────┬──────┘  │
+│       └────────────┴────────────┴────────────┴───────────────┘         │
 │                          │                                               │
 │              ┌───────────┴───────────┐                                  │
 │              │    Zustand Stores     │                                  │
@@ -127,7 +143,7 @@ See [docs/architecture.md](docs/architecture.md) for detailed documentation.
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 specs-wms-food-prod/
@@ -135,10 +151,25 @@ specs-wms-food-prod/
 ├── INITIAL.md                # Backend refactor specification
 ├── flow-viz-react/           # React 19 frontend application
 │   ├── src/
-│   │   ├── components/       # UI components
+│   │   ├── components/
+│   │   │   ├── flow/         # First Flow components (V4) - NEW
+│   │   │   │   ├── FirstFlowPage.tsx
+│   │   │   │   ├── BufferLane.tsx
+│   │   │   │   ├── LotCard.tsx
+│   │   │   │   ├── GateStepper.tsx
+│   │   │   │   └── TempBadge.tsx
+│   │   │   ├── command/      # Command Center (V2)
+│   │   │   ├── validator/    # Validator (V3)
+│   │   │   └── ui/           # Reusable UI primitives
 │   │   ├── stores/           # Zustand state management
-│   │   ├── types/            # TypeScript definitions
+│   │   │   ├── useFlowStore.ts   # Flow state (V4) - NEW
+│   │   │   ├── useAuthStore.ts
+│   │   │   └── useProductionStore.ts
+│   │   ├── types/
+│   │   │   └── flow.ts       # Flow type definitions - NEW
 │   │   └── lib/              # Utilities & schemas
+│   ├── public/scenarios/     # Seed configuration data
+│   │   └── first-flow-config.json  # First Flow config - NEW
 │   └── server/               # Node/Express API (legacy)
 ├── backend/                  # FastAPI backend (new)
 │   ├── app/
@@ -155,7 +186,9 @@ specs-wms-food-prod/
 │   ├── architecture.md       # System architecture
 │   ├── SETUP.md              # Setup guide
 │   ├── phase/                # Phase summaries
-│   │   └── phase-1_backend.md
+│   │   ├── phase-1_backend.md
+│   │   ├── phase-2_api-backend.md
+│   │   └── phase-3_first-flow.md   # First Flow phase - NEW
 │   └── decisions/            # ADRs
 └── .github/                  # CI/CD workflows
 ```

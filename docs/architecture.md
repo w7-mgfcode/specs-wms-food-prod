@@ -20,14 +20,14 @@ We are migrating from Node/Express to **FastAPI** using the **strangler pattern*
 |                              CLIENT LAYER                                |
 |  +--------------------------------------------------------------------+ |
 |  |                     React 19 + TypeScript                          | |
-|  |  +--------------+  +--------------+  +--------------------------+ | |
-|  |  |  Dashboard   |  |   Command    |  |       Validator          | | |
-|  |  |    (V1)      |  |   Center     |  |         (V3)             | | |
-|  |  |              |  |    (V2)      |  |                          | |  |
-|  |  | - FlowCanvas |  | - Lot Forms  |  | - Audit Log              | |  |
-|  |  | - Phases     |  | - QC Gates   |  | - Traceability Graph     | |  |
-|  |  | - Alerts     |  | - Prod Ctrl  |  | - Compliance Reports     | |  |
-|  |  +--------------+  +--------------+  +--------------------------+ |  |
+|  |  +-----------+ +-----------+ +-----------+ +---------------------+ | |
+|  |  | Dashboard | |  Command  | | Validator | |     First Flow      | | |
+|  |  |   (V1)    | |  Center   | |   (V3)    | |       (V4)          | | |
+|  |  |           | |   (V2)    | |           | |                     | | |
+|  |  |- FlowCanv | |- Lot Forms| |- Audit Log| |- BufferLane (x4)    | | |
+|  |  |- Phases   | |- QC Gates | |- Trace    | |- LotCard            | | |
+|  |  |- Alerts   | |- Prod Ctrl| |- Reports  | |- GateStepper (7)    | | |
+|  |  +-----------+ +-----------+ +-----------+ +---------------------+ | |
 |  +--------------------------------------------------------------------+ |
 |                                    |                                     |
 |                    +---------------+---------------+                    |
@@ -90,6 +90,7 @@ We are migrating from Node/Express to **FastAPI** using the **strangler pattern*
 | **FlowVizV1 (Dashboard)** | Real-time production flow visualization with phase navigation |
 | **FlowVizV2 (Command Center)** | Operator interface for lot registration, QC decisions |
 | **FlowVizV3 (Validator)** | Audit log and traceability graph for compliance |
+| **FirstFlowPage (V4)** | Lane-based buffer visualization with QC gate progression (NEW) |
 | **Presentation** | Demo/presentation mode for stakeholders |
 
 ### State Management (Zustand)
@@ -98,6 +99,7 @@ We are migrating from Node/Express to **FastAPI** using the **strangler pattern*
 |-------|----------------|
 | `useAuthStore` | Authentication state, user session, role |
 | `useProductionStore` | Active run, lots, phases, QC gates, auto-registration |
+| `useFlowStore` | Buffer lanes, lots, QC gate progression for First Flow (V4) - NEW |
 | `useUIStore` | Language, theme, navigation state |
 | `useToastStore` | Notifications and alerts |
 
@@ -188,13 +190,13 @@ We are migrating from Node/Express to **FastAPI** using the **strangler pattern*
 
 ### Role-Based Access Control
 
-| Role | Dashboard | Command | Validator | Admin |
-|------|:---------:|:-------:|:---------:|:-----:|
-| VIEWER | ✅ | ❌ | ❌ | ❌ |
-| OPERATOR | ✅ | ✅ | ❌ | ❌ |
-| MANAGER | ✅ | ✅ | ✅ | ❌ |
-| AUDITOR | ✅ | ❌ | ✅ | ❌ |
-| ADMIN | ✅ | ✅ | ✅ | ✅ |
+| Role | Dashboard | Command | Validator | First Flow | Admin |
+|------|:---------:|:-------:|:---------:|:----------:|:-----:|
+| VIEWER | View | - | - | View | - |
+| OPERATOR | View | Interact | - | Interact | - |
+| MANAGER | View | Interact | View | Interact | - |
+| AUDITOR | View | - | View | View | - |
+| ADMIN | View | Interact | View | Interact | Full |
 
 ---
 
@@ -304,7 +306,9 @@ Legacy Node/Express endpoints (deprecated):
 
 - [Architecture Decision Records](decisions/)
 - [Phase 1 Backend Summary](phase/phase-1_backend.md)
+- [Phase 3 First Flow Summary](phase/phase-3_first-flow.md)
 - [CLAUDE.md - AI Coding Guide](../CLAUDE.md)
 - [Database Migrations](../backend/alembic/)
 - [API Tests](../backend/tests/)
 - [Frontend Types](../flow-viz-react/src/types/)
+- [Flow Types](../flow-viz-react/src/types/flow.ts)
