@@ -1,0 +1,110 @@
+# Backend Refactor Plan (Safe Refactor)
+
+## Goals
+- Migrate the backend to the preferred stack (Python 3.13+, FastAPI >=0.125, SQLAlchemy 2.0.x async, PostgreSQL 17.x, Valkey 8.1+, Celery 5.4+).
+- Ensure a safe, incremental refactor with characterization tests and validation after each step.
+- Maintain backward compatibility for existing API behavior during the transition.
+
+## Target Tech Stack
+- **Runtime:** Python 3.13+
+- **Web framework:** FastAPI >=0.125
+- **ORM:** SQLAlchemy 2.0.x (async)
+- **Validation:** Pydantic 2.11+ (use `@field_validator`)
+- **Database:** PostgreSQL 17.x (JSONB, RLS if needed)
+- **Cache:** Valkey 8.1 (Redis-compatible)
+- **Migrations:** Alembic 1.14+
+- **Tasks:** Celery 5.4+
+- **DB Driver:** asyncpg (latest)
+- **Auth:** python-jose (latest)
+- **Password hashing:** bcrypt 4.x
+
+## Current Backend Snapshot
+- **Location:** `flow-viz-react/server/index.js`
+- **Runtime:** Node + Express + pg
+- **Key endpoints:**
+  - `GET /api/health`
+  - `POST /api/login`
+  - `GET /api/traceability/:lotCode`
+  - `POST /api/lots`
+  - `POST /api/qc-decisions`
+
+## Docker-First Plan
+- Add Docker services for:
+  - **FastAPI app** (Python 3.13)
+  - **PostgreSQL 17.x**
+  - **Valkey 8.1**
+- Keep current containers running during transition to enable side-by-side validation.
+- Provide a `.env` contract shared by old and new services.
+
+## Safe Refactor Workflow
+1. **Baseline**
+   - Capture current API outputs and response shapes (golden outputs/snapshots).
+   - Record performance baselines (latency for common endpoints).
+2. **Characterization Tests (if missing)**
+   - Add HTTP-level tests that lock in existing behavior.
+   - Validate error responses and edge cases (invalid login, missing lot, etc.).
+3. **Refactor in Small Steps (SRP)**
+   - Each change should be small and scoped to a single responsibility.
+4. **Validate After Each Step**
+   - Run characterization tests and compare response snapshots.
+5. **Remove Dead Code + Simplify**
+   - Decommission old code when parity is confirmed.
+6. **Final**
+   - Coverage check (minimum threshold agreed).
+   - Diff review (request focused on behavioral differences only).
+
+## Proposed Phases
+
+### Phase 0: Foundations
+- Scaffold FastAPI app and Docker services.
+- Define environment variables and shared configuration.
+- Create initial health endpoint for parity.
+
+### Phase 1: Data Layer
+- Define SQLAlchemy models aligned with current schema.
+- Create async DB session management.
+- Create Alembic setup and migrations (reflect existing DB schema if needed).
+
+### Phase 2: Authentication & Security
+- Implement login flow:
+  - Passwordless (if still required) or bcrypt-backed login.
+  - JWT tokens via python-jose.
+- Define Pydantic schemas with validation rules.
+
+### Phase 3: Core API Parity
+- Implement:
+  - `/api/health`
+  - `/api/login`
+  - `/api/traceability/{lot_code}`
+  - `/api/lots`
+  - `/api/qc-decisions`
+- Confirm response shape parity with characterization tests.
+
+### Phase 4: Caching + Async Tasks
+- Introduce Valkey for caching high-traffic reads.
+- Add Celery for async workflows (audit logging, heavy traceability graphs).
+
+### Phase 5: Cutover & Cleanup
+- Run side-by-side in Docker; route traffic to new API.
+- Decommission Node/Express server after parity is confirmed.
+- Update docs and deployment instructions.
+
+## Characterization Test Matrix
+- **Health**: status code + JSON shape
+- **Login**: valid/invalid email; user not found
+- **Traceability**: lot exists / not found; parents/children integrity
+- **Lot registration**: valid insert; invalid schema
+- **QC decision**: valid insert; invalid schema
+
+## Validation Checklist (per step)
+- [ ] All characterization tests pass
+- [ ] Response payloads unchanged (or explicitly documented)
+- [ ] Performance baseline not degraded beyond agreed threshold
+- [ ] Docker Compose up/down cleanly
+
+## Deliverables
+- Docker Compose for FastAPI + Postgres + Valkey
+- FastAPI backend with async SQLAlchemy models
+- Alembic migrations and versioning
+- Characterization tests and API snapshots
+- Updated docs for running and testing
