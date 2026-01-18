@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@upstash/context7-mcp": "^2.1.0"
+  },
+  "devDependencies": {
+    "@heilgar/shadcn-ui-mcp-server": "^1.0.6",
+    "@playwright/mcp": "^0.0.56"
+  }
+}

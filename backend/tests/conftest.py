@@ -9,10 +9,13 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.database import Base, get_db
+from app.database import Base
+from app.api.deps import get_db  # Import from single source of truth
 from app.main import app
 
 # Use SQLite for testing (faster, no external deps)
+# NOTE: For schema validation with PostgreSQL-specific types (JSONB, enums, UUID),
+# consider using a PostgreSQL test database or testcontainers-python.
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 

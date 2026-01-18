@@ -32,24 +32,6 @@ class Base(DeclarativeBase):
     pass
 
 
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """
-    Dependency that provides an async database session.
-
-    Usage:
-        @router.get("/items")
-        async def get_items(db: AsyncSession = Depends(get_db)):
-            ...
-    """
-    async with async_session_maker() as session:
-        try:
-            yield session
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
-
-
 async def init_db() -> None:
     """Initialize database tables (for development/testing only)."""
     async with engine.begin() as conn:

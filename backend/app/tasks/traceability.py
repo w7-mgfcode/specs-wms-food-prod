@@ -1,8 +1,8 @@
 """Background tasks for traceability calculations."""
 
 import asyncio
-import json
-from typing import Any
+from collections import deque
+from typing import Any, Literal
 
 from app.tasks import celery_app
 
@@ -62,86 +62,99 @@ async def _calculate_deep_genealogy_async(lot_id: str) -> dict[str, Any]:
         return genealogy_data
 
 
-async def _get_all_ancestors(db, lot_id: str, max_depth: int = 10) -> list[dict]:
-    """Recursively get all ancestor lots up to max_depth."""
+async def _traverse_genealogy(
+    db,
+    root_lot_id: str,
+    *,
+    max_depth: int,
+    direction: Literal["ancestors", "descendants"],
+) -> list[dict]:
+    """
+    Traverse lot genealogy tree using BFS.
+
+    This is a shared helper for both ancestor and descendant traversal,
+    parameterized by direction to avoid code duplication.
+
+    Args:
+        db: Database session
+        root_lot_id: Starting lot UUID
+        max_depth: Maximum traversal depth
+        direction: "ancestors" to find parents, "descendants" to find children
+
+    Returns:
+        List of related lots with metadata
+    """
     from sqlalchemy import select
 
     from app.models.lot import Lot, LotGenealogy
 
-    ancestors = []
-    visited = set()
-    queue = [(lot_id, 0)]  # (lot_id, depth)
+    results: list[dict] = []
+    visited: set[str] = set()
+    queue: deque[tuple[str, int]] = deque([(root_lot_id, 0)])
 
     while queue:
-        current_id, depth = queue.pop(0)
+        current_id, depth = queue.popleft()
 
         if depth >= max_depth or current_id in visited:
             continue
 
         visited.add(current_id)
 
-        # Get parents of current lot
-        stmt = (
-            select(Lot, LotGenealogy.quantity_used_kg)
-            .join(LotGenealogy, LotGenealogy.parent_lot_id == Lot.id)
-            .where(LotGenealogy.child_lot_id == current_id)
-        )
+        # Build query based on direction
+        if direction == "ancestors":
+            # Get parents of current lot
+            stmt = (
+                select(Lot, LotGenealogy.quantity_used_kg)
+                .join(LotGenealogy, LotGenealogy.parent_lot_id == Lot.id)
+                .where(LotGenealogy.child_lot_id == current_id)
+            )
+        else:  # descendants
+            # Get children of current lot
+            stmt = (
+                select(Lot, LotGenealogy.quantity_used_kg)
+                .join(LotGenealogy, LotGenealogy.child_lot_id == Lot.id)
+                .where(LotGenealogy.parent_lot_id == current_id)
+            )
+
         result = await db.execute(stmt)
 
-        for parent, quantity in result.all():
-            if parent.id not in visited:
-                ancestors.append({
-                    "id": str(parent.id),
-                    "lot_code": parent.lot_code,
-                    "lot_type": parent.lot_type.value if parent.lot_type else None,
-                    "weight_kg": float(parent.weight_kg) if parent.weight_kg else None,
+        for related_lot, quantity in result.all():
+            if related_lot.id not in visited:
+                results.append({
+                    "id": str(related_lot.id),
+                    "lot_code": related_lot.lot_code,
+                    "lot_type": (
+                        related_lot.lot_type.value if related_lot.lot_type else None
+                    ),
+                    "weight_kg": (
+                        float(related_lot.weight_kg) if related_lot.weight_kg else None
+                    ),
                     "quantity_used_kg": float(quantity) if quantity else None,
                     "depth": depth + 1,
                 })
-                queue.append((parent.id, depth + 1))
+                queue.append((related_lot.id, depth + 1))
 
-    return ancestors
+    return results
+
+
+async def _get_all_ancestors(db, lot_id: str, max_depth: int = 10) -> list[dict]:
+    """Recursively get all ancestor lots up to max_depth."""
+    return await _traverse_genealogy(
+        db,
+        root_lot_id=lot_id,
+        max_depth=max_depth,
+        direction="ancestors",
+    )
 
 
 async def _get_all_descendants(db, lot_id: str, max_depth: int = 10) -> list[dict]:
     """Recursively get all descendant lots up to max_depth."""
-    from sqlalchemy import select
-
-    from app.models.lot import Lot, LotGenealogy
-
-    descendants = []
-    visited = set()
-    queue = [(lot_id, 0)]  # (lot_id, depth)
-
-    while queue:
-        current_id, depth = queue.pop(0)
-
-        if depth >= max_depth or current_id in visited:
-            continue
-
-        visited.add(current_id)
-
-        # Get children of current lot
-        stmt = (
-            select(Lot, LotGenealogy.quantity_used_kg)
-            .join(LotGenealogy, LotGenealogy.child_lot_id == Lot.id)
-            .where(LotGenealogy.parent_lot_id == current_id)
-        )
-        result = await db.execute(stmt)
-
-        for child, quantity in result.all():
-            if child.id not in visited:
-                descendants.append({
-                    "id": str(child.id),
-                    "lot_code": child.lot_code,
-                    "lot_type": child.lot_type.value if child.lot_type else None,
-                    "weight_kg": float(child.weight_kg) if child.weight_kg else None,
-                    "quantity_used_kg": float(quantity) if quantity else None,
-                    "depth": depth + 1,
-                })
-                queue.append((child.id, depth + 1))
-
-    return descendants
+    return await _traverse_genealogy(
+        db,
+        root_lot_id=lot_id,
+        max_depth=max_depth,
+        direction="descendants",
+    )
 
 
 @celery_app.task(name="invalidate_lot_cache")

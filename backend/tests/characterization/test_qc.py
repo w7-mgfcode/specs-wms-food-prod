@@ -91,6 +91,25 @@ async def test_hold_decision_requires_notes(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_fail_decision_requires_notes(client: AsyncClient):
     """FAIL decision requires notes (min 10 chars)."""
+    # Without notes - should fail validation
+    response = await client.post(
+        "/api/qc-decisions",
+        json={
+            "decision": "FAIL",
+        },
+    )
+    assert response.status_code == 422  # Validation error
+
+    # With short notes - should fail
+    response = await client.post(
+        "/api/qc-decisions",
+        json={
+            "decision": "FAIL",
+            "notes": "short",
+        },
+    )
+    assert response.status_code == 422
+
     # With proper notes - should succeed
     response = await client.post(
         "/api/qc-decisions",

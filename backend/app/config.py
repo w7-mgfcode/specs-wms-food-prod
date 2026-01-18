@@ -19,7 +19,8 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://admin:password@localhost:5432/flowviz"
 
     # Authentication
-    secret_key: str = "your-super-secret-key-change-in-production-min-32-chars"
+    # NOTE: No default - must be set via environment variable in production
+    secret_key: str = "INSECURE-DEV-ONLY-CHANGE-ME"
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 30
 
@@ -39,11 +40,34 @@ class Settings(BaseSettings):
         """Check if running in production environment."""
         return self.environment.lower() == "production"
 
+    def validate_production_settings(self) -> None:
+        """
+        Validate that production-critical settings are properly configured.
+
+        Raises:
+            ValueError: If production settings are insecure.
+        """
+        if self.is_production:
+            # Fail fast if using insecure default secret key in production
+            if "INSECURE" in self.secret_key or len(self.secret_key) < 32:
+                raise ValueError(
+                    "SECRET_KEY must be set to a secure value (min 32 chars) "
+                    "in production. Set the SECRET_KEY environment variable."
+                )
+            # Ensure debug is disabled in production
+            if self.debug:
+                raise ValueError(
+                    "DEBUG must be False in production. "
+                    "Set DEBUG=false in environment."
+                )
+
 
 @lru_cache
 def get_settings() -> Settings:
     """Get cached settings instance."""
-    return Settings()
+    instance = Settings()
+    instance.validate_production_settings()
+    return instance
 
 
 settings = get_settings()

@@ -20,6 +20,12 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency that provides an async database session.
 
+    This is the SINGLE SOURCE OF TRUTH for database session management.
+    All route handlers should use this dependency via `Depends(get_db)`.
+
+    The session automatically commits on success and rolls back on exception.
+    For testing, override this dependency in `app.dependency_overrides`.
+
     Usage:
         @router.get("/items")
         async def get_items(db: AsyncSession = Depends(get_db)):
