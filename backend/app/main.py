@@ -30,13 +30,12 @@ def create_app() -> FastAPI:
         redoc_url="/redoc" if settings.debug else None,
     )
 
-    # CORS middleware
-    # Note: allow_credentials=True is invalid with allow_origins=["*"]
-    # In debug mode, we use permissive settings without credentials
+    # CORS middleware - env-driven origins
+    # Note: allow_credentials=True requires explicit origin list (not ["*"])
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"] if settings.debug else ["https://flowviz.example.com"],
-        allow_credentials=not settings.debug,  # False in debug (wildcard), True in prod
+        allow_origins=settings.cors_origins,
+        allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )

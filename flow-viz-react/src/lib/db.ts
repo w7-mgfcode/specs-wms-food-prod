@@ -1,3 +1,14 @@
+/**
+ * @deprecated This file is deprecated as of Phase 4 (FastAPI integration).
+ * Use the new API client instead:
+ *   - For lots: import { useCreateLot } from '../hooks/useLots'
+ *   - For QC decisions: import { useCreateQCDecision } from '../hooks/useQC'
+ *   - For raw API calls: import { api } from './api'
+ *
+ * This file is kept for backwards compatibility during migration.
+ * Will be removed in a future version.
+ */
+
 import { supabase } from './supabase';
 import type { Database } from '../types/database.types';
 

@@ -1,3 +1,13 @@
+/**
+ * @deprecated This file is deprecated as of Phase 4 (FastAPI integration).
+ * Use the new API client instead:
+ *   - For auth: import { useAuthStore } from '../stores/useAuthStore'
+ *   - For raw API calls: import { api } from './api'
+ *
+ * This file is kept for backwards compatibility during migration.
+ * Will be removed in a future version.
+ */
+
 /// <reference types="vite/client" />
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/database.types';
