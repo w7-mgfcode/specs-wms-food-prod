@@ -1,0 +1,71 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+.venv/
+ENV/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Testing
+.tox/
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# === Backup & Security (CRITICAL) ===
+# GPG keys - NEVER commit private keys
+keys/
+*.key
+*.gpg
+!*.dump.gpg
+
+# Backup files
+backups/
+*.dump
+*.backup
+*.bak
+
+# Restore temporary files
+restore_temp/
+*.restore
+
+# Log files
+*.log
+logs/
+
+# Reports
+reports/
+*.json.report

@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
@@ -36,6 +37,17 @@ def create_app() -> FastAPI:
     # Rate limiting - store limiter in app state and register exception handler
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
+
+    # Prometheus instrumentation - MUST be before expose()
+    Instrumentator(
+        should_group_status_codes=True,
+        should_ignore_untemplated=True,
+        should_respect_env_var=True,
+        should_instrument_requests_inprogress=True,
+        excluded_handlers=["/metrics", "/health", "/docs", "/redoc", "/openapi.json"],
+        inprogress_name="flowviz_http_requests_inprogress",
+        inprogress_labels=True,
+    ).instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)
 
     # CORS middleware - env-driven origins
     # Note: allow_credentials=True requires explicit origin list (not ["*"])
