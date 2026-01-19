@@ -11,7 +11,21 @@
 
 ---
 
-## What's New (v0.4.0) 🎉
+## What's New (v0.5.0) 🎉
+
+- **Security Hardening** — Production-grade RBAC and rate limiting foundation
+- **Role-Based Access Control** — FastAPI dependency injection enforcing 5-tier permissions (ADMIN, MANAGER, AUDITOR, OPERATOR, VIEWER)
+- **Rate Limiting** — SlowAPI + Valkey preventing brute-force attacks (10/min login, 100-200/min endpoints)
+- **Enhanced JWT** — Role claims embedded in tokens for efficient authorization
+- **Comprehensive Tests** — 487-line RBAC suite + 131-line rate limiting suite
+- **ADR-0003** — Architecture Decision Record documenting RBAC design
+- **100% Backward Compatible** — No frontend changes required
+- See [Phase 5 Summary](docs/phase/phase-5_security-hardening-rbac-ratelimit.md) for details
+
+### Previous Releases
+
+<details>
+<summary>v0.4.0 - Frontend-FastAPI Integration</summary>
 
 - **Frontend-FastAPI Integration** — Complete migration from Supabase/mock to FastAPI backend
 - **API Client Layer** — Hybrid approach with generated types and handwritten fetch wrapper
@@ -22,7 +36,9 @@
 - **Documentation** — ENVIRONMENT.md (128 lines) and RUNBOOK.md (309 lines)
 - See [Phase 4 Summary](docs/phase/phase-4_frontend-fastapi-integration.md) for details
 
-### Previous Releases
+</details>
+
+### Earlier Releases
 
 <details>
 <summary>v0.3.0 - First Flow Lane UI</summary>
@@ -52,11 +68,12 @@
 ## Features
 
 - **Real-time Flow Visualization** — Track production across 3 parallel streams (A, B, C)
-- **First Flow (V4)** — Lane-based buffer visualization with QC gate progression (NEW)
+- **First Flow (V4)** — Lane-based buffer visualization with QC gate progression
 - **Lot Traceability** — Full parent/child genealogy with weight and temperature tracking
 - **QC Gates** — Quality control checkpoints with PASS/HOLD/FAIL decisions and CCP support
 - **Temperature Monitoring** — Color-coded badges with ok/warning/critical thresholds
-- **Role-Based Access Control** — ADMIN, MANAGER, AUDITOR, OPERATOR, VIEWER roles
+- **Role-Based Access Control** — ADMIN, MANAGER, AUDITOR, OPERATOR, VIEWER roles with FastAPI RBAC enforcement (NEW in v0.5.0)
+- **Rate Limiting** — SlowAPI + Valkey preventing brute-force attacks and API abuse (NEW in v0.5.0)
 - **Multi-Language Support** — Hungarian (hu) and English (en)
 - **Production Run Management** — Start/stop runs, auto-registration, summaries
 
@@ -190,6 +207,13 @@ See [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) for complete documentation.
                           └─────────────────────┘
 ```
 
+**Key Changes in Phase 5**:
+- ✅ **RBAC**: FastAPI dependency injection with 5-tier role permissions
+- ✅ **Rate Limiting**: SlowAPI + Valkey (10/min login, 100-200/min endpoints)
+- ✅ **Enhanced JWT**: Role claims for efficient authorization
+- ✅ **Test Coverage**: 618 lines of security tests (RBAC + rate limiting)
+- ✅ **ADR-0003**: Architecture Decision Record for RBAC design
+
 **Key Changes in Phase 4**:
 - ✅ **State Separation**: Zustand (UI) + TanStack Query (Server)
 - ✅ **API Client**: Hybrid pattern with JWT in memory (XSS protection)
@@ -248,29 +272,38 @@ specs-wms-food-prod/
 │   └── .env.example          # Environment template (Phase 4) - NEW
 ├── backend/                  # FastAPI backend
 │   ├── app/
-│   │   ├── api/routes/       # API endpoints
+│   │   ├── api/
+│   │   │   ├── routes/       # API endpoints (RBAC protected - Phase 5)
+│   │   │   └── deps.py       # RBAC dependencies (Phase 5) - UPDATED
 │   │   ├── models/           # SQLAlchemy models
 │   │   ├── schemas/          # Pydantic schemas
 │   │   ├── services/         # Business logic
-│   │   ├── config.py         # Settings (CORS env-driven) - UPDATED
+│   │   ├── config.py         # Settings (CORS env-driven)
+│   │   ├── rate_limit.py     # SlowAPI limiter (Phase 5) - NEW
 │   │   └── tasks/            # Celery tasks
 │   ├── alembic/              # Database migrations
 │   ├── docker/               # Docker Compose
-│   └── tests/                # Characterization tests
+│   └── tests/                # Tests
+│       ├── test_rbac.py      # RBAC test suite (Phase 5) - NEW
+│       ├── test_rate_limiting.py  # Rate limit tests (Phase 5) - NEW
+│       └── characterization/ # API parity tests
 ├── PRPs/                     # Pydantic AI agent templates
-│   ├── phase4-frontend-fastapi-integration.md  # Phase 4 PRP - NEW
-│   └── phase4-security-error-handling.md       # Phase 4 Security - NEW
+│   ├── phase5-security-hardening-rbac-ratelimit.md  # Phase 5 PRP - NEW
+│   ├── phase4-frontend-fastapi-integration.md
+│   └── phase4-security-error-handling.md
 ├── docs/
-│   ├── architecture.md       # System architecture
+│   ├── architecture.md       # System architecture (Phase 5 updated)
 │   ├── SETUP.md              # Setup guide
-│   ├── ENVIRONMENT.md        # Environment variables (Phase 4) - NEW
-│   ├── RUNBOOK.md            # Error scenarios (Phase 4) - NEW
+│   ├── ENVIRONMENT.md        # Environment variables
+│   ├── RUNBOOK.md            # Error scenarios
 │   ├── phase/                # Phase summaries
 │   │   ├── phase-1_backend.md
 │   │   ├── phase-2_api-backend.md
 │   │   ├── phase-3_first-flow.md
-│   │   └── phase-4_frontend-fastapi-integration.md  # Phase 4 - NEW
+│   │   ├── phase-4_frontend-fastapi-integration.md
+│   │   └── phase-5_security-hardening-rbac-ratelimit.md  # Phase 5 - NEW
 │   └── decisions/            # ADRs
+│       └── 0003-rbac-enforcement.md  # Phase 5 - NEW
 └── .github/                  # CI/CD workflows
 ```
 
