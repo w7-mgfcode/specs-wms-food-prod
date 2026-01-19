@@ -88,7 +88,7 @@ interface UserResponse {
     "created_at": "2026-01-01T00:00:00Z",
     "last_login": null
   },
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "token": "<jwt-token>"
 }
 ```
 

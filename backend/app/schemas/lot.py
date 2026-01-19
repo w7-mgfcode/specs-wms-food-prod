@@ -35,7 +35,7 @@ class LotResponse(BaseModel):
     Node/Express returns the full lot row after INSERT.
     """
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: UUID
     lot_code: str
