@@ -19,12 +19,17 @@ async def create_qc_decision(
     db: DBSession,
 ) -> QCDecisionResponse:
     """
-    Record a QC decision - matches Node/Express behavior.
+    Record a QC decision for a lot.
 
-    Node/Express uses dynamic field insertion from request body.
-    We use structured Pydantic validation with HOLD/FAIL notes requirement.
+    Required fields:
+        - lot_id: UUID of the lot being evaluated
+        - decision: PASS, HOLD, or FAIL
 
-    Response: Returns the created decision with all fields.
+    Validation:
+        - HOLD/FAIL decisions require notes (min 10 chars)
+        - Returns 422 if required fields missing or validation fails
+
+    Response: Returns the created decision with all fields (201 Created).
     """
     # Create decision instance from validated data
     decision = QCDecision(

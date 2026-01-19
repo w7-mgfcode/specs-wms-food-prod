@@ -14,13 +14,25 @@ class QCDecisionCreate(BaseModel):
     """
     QC decision creation request schema.
 
-    Note: HOLD and FAIL decisions require notes (min 10 chars per CLAUDE.md).
+    Required fields:
+        - lot_id: The lot being evaluated (UUID)
+        - decision: PASS, HOLD, or FAIL
+
+    Optional fields:
+        - qc_gate_id: Associated QC gate (UUID)
+        - operator_id: Operator recording the decision (UUID)
+        - notes: Required for HOLD/FAIL (min 10 chars per CLAUDE.md)
+        - temperature_c: Temperature reading at decision time
+        - digital_signature: Optional signature for audit trail
+
+    Validation:
+        - HOLD and FAIL decisions require notes with minimum 10 characters.
     """
 
-    lot_id: UUID | None = None
+    lot_id: UUID
+    decision: Decision
     qc_gate_id: UUID | None = None
     operator_id: UUID | None = None
-    decision: Decision | None = None
     notes: str | None = Field(None, max_length=1000)
     temperature_c: Decimal | None = Field(None, ge=-50, le=100)
     digital_signature: str | None = None
