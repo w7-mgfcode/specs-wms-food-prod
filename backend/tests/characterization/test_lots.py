@@ -7,9 +7,9 @@ from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_create_lot_returns_201(client: AsyncClient):
+async def test_create_lot_returns_201(authenticated_client: AsyncClient):
     """Creating a lot should return 201 Created."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/lots",
         json={
             "lot_code": "TEST-LOT-001",
@@ -23,13 +23,13 @@ async def test_create_lot_returns_201(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_create_lot_response_shape(client: AsyncClient):
+async def test_create_lot_response_shape(authenticated_client: AsyncClient):
     """
     Lot creation response shape must match Node/Express.
 
     Expected: Returns the created lot with all fields.
     """
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/lots",
         json={
             "lot_code": "TEST-LOT-002",
@@ -62,9 +62,9 @@ async def test_create_lot_response_shape(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_create_lot_with_minimal_data(client: AsyncClient):
+async def test_create_lot_with_minimal_data(authenticated_client: AsyncClient):
     """Lot can be created with just lot_code (other fields optional)."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/lots",
         json={"lot_code": "TEST-LOT-MINIMAL"},
     )
@@ -76,9 +76,9 @@ async def test_create_lot_with_minimal_data(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_create_lot_with_metadata(client: AsyncClient):
+async def test_create_lot_with_metadata(authenticated_client: AsyncClient):
     """Lot can include custom metadata."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/lots",
         json={
             "lot_code": "TEST-LOT-META",
@@ -92,13 +92,13 @@ async def test_create_lot_with_metadata(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_create_lot_success_snapshot(client: AsyncClient, snapshot):
+async def test_create_lot_success_snapshot(authenticated_client: AsyncClient, snapshot):
     """
     Snapshot test: Lot creation success response.
 
     Golden snapshot captures response shape with normalized dynamic fields.
     """
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/lots",
         json={
             "lot_code": "SNAPSHOT-LOT",
@@ -121,9 +121,9 @@ async def test_create_lot_success_snapshot(client: AsyncClient, snapshot):
 
 
 @pytest.mark.asyncio
-async def test_create_lot_missing_lot_code_returns_422(client: AsyncClient):
+async def test_create_lot_missing_lot_code_returns_422(authenticated_client: AsyncClient):
     """Lot creation must fail with 422 when lot_code is missing."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/lots",
         json={
             # "lot_code" is intentionally omitted
@@ -148,10 +148,10 @@ async def test_create_lot_missing_lot_code_returns_422(client: AsyncClient):
     ],
 )
 async def test_create_lot_negative_weight_returns_422(
-    client: AsyncClient, weight: float, description: str
+    authenticated_client: AsyncClient, weight: float, description: str
 ):
     """Lot creation must fail with 422 when weight_kg is negative."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/lots",
         json={
             "lot_code": f"TEST-LOT-{description.replace(' ', '-').upper()}",
@@ -171,10 +171,10 @@ async def test_create_lot_negative_weight_returns_422(
     ],
 )
 async def test_create_lot_over_max_weight_returns_422(
-    client: AsyncClient, weight: float, description: str
+    authenticated_client: AsyncClient, weight: float, description: str
 ):
     """Lot creation must fail with 422 when weight_kg exceeds the allowed upper bound (10000)."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/lots",
         json={
             "lot_code": f"TEST-LOT-{description.replace(' ', '-').upper()}",
@@ -186,9 +186,9 @@ async def test_create_lot_over_max_weight_returns_422(
 
 
 @pytest.mark.asyncio
-async def test_create_lot_at_max_weight_boundary_succeeds(client: AsyncClient):
+async def test_create_lot_at_max_weight_boundary_succeeds(authenticated_client: AsyncClient):
     """Lot creation should succeed at the exact max weight boundary (10000)."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/lots",
         json={
             "lot_code": "TEST-LOT-MAX-WEIGHT",
@@ -200,9 +200,9 @@ async def test_create_lot_at_max_weight_boundary_succeeds(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_create_lot_at_zero_weight_succeeds(client: AsyncClient):
+async def test_create_lot_at_zero_weight_succeeds(authenticated_client: AsyncClient):
     """Lot creation should succeed at zero weight (boundary)."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/lots",
         json={
             "lot_code": "TEST-LOT-ZERO-WEIGHT",
@@ -225,10 +225,10 @@ async def test_create_lot_at_zero_weight_succeeds(client: AsyncClient):
     ],
 )
 async def test_create_lot_temperature_below_min_returns_422(
-    client: AsyncClient, temp: float, description: str
+    authenticated_client: AsyncClient, temp: float, description: str
 ):
     """Lot creation must fail with 422 when temperature_c is below the allowed range (-50)."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/lots",
         json={
             "lot_code": f"TEST-LOT-{description.replace(' ', '-').upper()}",
@@ -248,10 +248,10 @@ async def test_create_lot_temperature_below_min_returns_422(
     ],
 )
 async def test_create_lot_temperature_above_max_returns_422(
-    client: AsyncClient, temp: float, description: str
+    authenticated_client: AsyncClient, temp: float, description: str
 ):
     """Lot creation must fail with 422 when temperature_c is above the allowed range (100)."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/lots",
         json={
             "lot_code": f"TEST-LOT-{description.replace(' ', '-').upper()}",
@@ -263,9 +263,9 @@ async def test_create_lot_temperature_above_max_returns_422(
 
 
 @pytest.mark.asyncio
-async def test_create_lot_at_min_temperature_boundary_succeeds(client: AsyncClient):
+async def test_create_lot_at_min_temperature_boundary_succeeds(authenticated_client: AsyncClient):
     """Lot creation should succeed at the exact min temperature boundary (-50)."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/lots",
         json={
             "lot_code": "TEST-LOT-MIN-TEMP",
@@ -277,9 +277,9 @@ async def test_create_lot_at_min_temperature_boundary_succeeds(client: AsyncClie
 
 
 @pytest.mark.asyncio
-async def test_create_lot_at_max_temperature_boundary_succeeds(client: AsyncClient):
+async def test_create_lot_at_max_temperature_boundary_succeeds(authenticated_client: AsyncClient):
     """Lot creation should succeed at the exact max temperature boundary (100)."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/lots",
         json={
             "lot_code": "TEST-LOT-MAX-TEMP",
@@ -294,9 +294,9 @@ async def test_create_lot_at_max_temperature_boundary_succeeds(client: AsyncClie
 
 
 @pytest.mark.asyncio
-async def test_create_lot_invalid_lot_type_returns_422(client: AsyncClient):
+async def test_create_lot_invalid_lot_type_returns_422(authenticated_client: AsyncClient):
     """Lot creation must fail with 422 when lot_type is not a valid enum value."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/lots",
         json={
             "lot_code": "TEST-LOT-INVALID-TYPE",
@@ -312,9 +312,9 @@ async def test_create_lot_invalid_lot_type_returns_422(client: AsyncClient):
     "lot_type",
     ["RAW", "DEB", "BULK", "MIX", "SKW", "FRZ", "FG"],
 )
-async def test_create_lot_valid_lot_types_succeed(client: AsyncClient, lot_type: str):
+async def test_create_lot_valid_lot_types_succeed(authenticated_client: AsyncClient, lot_type: str):
     """All valid lot types should be accepted."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/lots",
         json={
             "lot_code": f"TEST-LOT-{lot_type}",

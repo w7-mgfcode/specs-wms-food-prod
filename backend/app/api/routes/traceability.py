@@ -1,10 +1,11 @@
 """Traceability endpoints."""
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 from sqlalchemy import select
 
-from app.api.deps import DBSession
+from app.api.deps import AllAuthenticated, DBSession
 from app.models.lot import Lot, LotGenealogy
+from app.rate_limit import limiter
 from app.schemas.lot import LotResponse
 from app.schemas.traceability import TraceabilityResponse
 
@@ -12,12 +13,19 @@ router = APIRouter(tags=["traceability"])
 
 
 @router.get("/traceability/{lot_code}", response_model=TraceabilityResponse)
+@limiter.limit("50/minute")
 async def get_traceability(
+    request: Request,
     lot_code: str,
     db: DBSession,
+    current_user: AllAuthenticated,
 ) -> TraceabilityResponse:
     """
     Get lot traceability graph - matches Node/Express behavior.
+
+    Requires: Any authenticated user (ADMIN, MANAGER, AUDITOR, OPERATOR, VIEWER).
+    All roles can access traceability for compliance requirements.
+    Rate limit: 50/minute (expensive recursive queries).
 
     Response shape matches Node/Express exactly:
     {
