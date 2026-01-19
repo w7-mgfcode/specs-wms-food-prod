@@ -2,13 +2,16 @@
 
 from datetime import UTC, datetime
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
+
+from app.rate_limit import limiter
 
 router = APIRouter(tags=["health"])
 
 
 @router.get("/health")
-async def health_check() -> dict:
+@limiter.limit("200/minute")
+async def health_check(request: Request) -> dict:
     """
     Health check endpoint.
 

@@ -26,6 +26,9 @@ dependencies = [
     "redis>=5.0.0",
     "celery[redis]>=5.4.0",
 
+    # Rate limiting
+    "slowapi>=0.1.9",
+
     # Utilities
     "httpx>=0.28.0",
     "python-multipart>=0.0.18",

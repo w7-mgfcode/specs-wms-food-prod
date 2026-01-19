@@ -10,9 +10,9 @@ TEST_LOT_ID = "00000000-0000-0000-0000-000000000001"
 
 
 @pytest.mark.asyncio
-async def test_create_qc_decision_returns_201(client: AsyncClient):
+async def test_create_qc_decision_returns_201(authenticated_client: AsyncClient):
     """Creating a QC decision should return 201 Created."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={
             "lot_id": TEST_LOT_ID,
@@ -25,13 +25,13 @@ async def test_create_qc_decision_returns_201(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_create_qc_decision_response_shape(client: AsyncClient):
+async def test_create_qc_decision_response_shape(authenticated_client: AsyncClient):
     """
     QC decision response shape must match Node/Express.
 
     Expected: Returns the created decision with all fields.
     """
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={
             "lot_id": TEST_LOT_ID,
@@ -63,13 +63,13 @@ async def test_create_qc_decision_response_shape(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_create_qc_decision_success_snapshot(client: AsyncClient, snapshot):
+async def test_create_qc_decision_success_snapshot(authenticated_client: AsyncClient, snapshot):
     """
     Snapshot test: QC decision success response.
 
     Golden snapshot captures response shape with normalized dynamic fields.
     """
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={
             "lot_id": TEST_LOT_ID,
@@ -92,9 +92,9 @@ async def test_create_qc_decision_success_snapshot(client: AsyncClient, snapshot
 
 
 @pytest.mark.asyncio
-async def test_hold_decision_without_notes_returns_422(client: AsyncClient):
+async def test_hold_decision_without_notes_returns_422(authenticated_client: AsyncClient):
     """HOLD decision without notes must return 422."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={
             "lot_id": TEST_LOT_ID,
@@ -105,9 +105,9 @@ async def test_hold_decision_without_notes_returns_422(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_hold_decision_with_short_notes_returns_422(client: AsyncClient):
+async def test_hold_decision_with_short_notes_returns_422(authenticated_client: AsyncClient):
     """HOLD decision with notes < 10 chars must return 422."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={
             "lot_id": TEST_LOT_ID,
@@ -119,9 +119,9 @@ async def test_hold_decision_with_short_notes_returns_422(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_hold_decision_with_exactly_10_chars_succeeds(client: AsyncClient):
+async def test_hold_decision_with_exactly_10_chars_succeeds(authenticated_client: AsyncClient):
     """HOLD decision with exactly 10 character notes should succeed."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={
             "lot_id": TEST_LOT_ID,
@@ -133,9 +133,9 @@ async def test_hold_decision_with_exactly_10_chars_succeeds(client: AsyncClient)
 
 
 @pytest.mark.asyncio
-async def test_hold_decision_with_valid_notes_succeeds(client: AsyncClient):
+async def test_hold_decision_with_valid_notes_succeeds(authenticated_client: AsyncClient):
     """HOLD decision with proper notes (>=10 chars) should succeed."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={
             "lot_id": TEST_LOT_ID,
@@ -150,9 +150,9 @@ async def test_hold_decision_with_valid_notes_succeeds(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_fail_decision_without_notes_returns_422(client: AsyncClient):
+async def test_fail_decision_without_notes_returns_422(authenticated_client: AsyncClient):
     """FAIL decision without notes must return 422."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={
             "lot_id": TEST_LOT_ID,
@@ -163,9 +163,9 @@ async def test_fail_decision_without_notes_returns_422(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_fail_decision_with_short_notes_returns_422(client: AsyncClient):
+async def test_fail_decision_with_short_notes_returns_422(authenticated_client: AsyncClient):
     """FAIL decision with notes < 10 chars must return 422."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={
             "lot_id": TEST_LOT_ID,
@@ -177,9 +177,9 @@ async def test_fail_decision_with_short_notes_returns_422(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_fail_decision_with_valid_notes_succeeds(client: AsyncClient):
+async def test_fail_decision_with_valid_notes_succeeds(authenticated_client: AsyncClient):
     """FAIL decision with proper notes (>=10 chars) should succeed."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={
             "lot_id": TEST_LOT_ID,
@@ -195,9 +195,9 @@ async def test_fail_decision_with_valid_notes_succeeds(client: AsyncClient):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("decision", ["HOLD", "FAIL"])
-async def test_hold_fail_requires_notes_parametrized(client: AsyncClient, decision: str):
+async def test_hold_fail_requires_notes_parametrized(authenticated_client: AsyncClient, decision: str):
     """HOLD/FAIL decisions require notes (min 10 chars) - parametrized."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={"lot_id": TEST_LOT_ID, "decision": decision},
     )
@@ -206,9 +206,9 @@ async def test_hold_fail_requires_notes_parametrized(client: AsyncClient, decisi
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("decision", ["HOLD", "FAIL"])
-async def test_hold_fail_notes_min_length_parametrized(client: AsyncClient, decision: str):
+async def test_hold_fail_notes_min_length_parametrized(authenticated_client: AsyncClient, decision: str):
     """Notes must be at least 10 characters for HOLD/FAIL - parametrized."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={"lot_id": TEST_LOT_ID, "decision": decision, "notes": "short"},
     )
@@ -217,9 +217,9 @@ async def test_hold_fail_notes_min_length_parametrized(client: AsyncClient, deci
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("decision", ["HOLD", "FAIL"])
-async def test_hold_fail_with_valid_notes_parametrized(client: AsyncClient, decision: str):
+async def test_hold_fail_with_valid_notes_parametrized(authenticated_client: AsyncClient, decision: str):
     """HOLD/FAIL with proper notes (>=10 chars) succeeds - parametrized."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={
             "lot_id": TEST_LOT_ID,
@@ -234,9 +234,9 @@ async def test_hold_fail_with_valid_notes_parametrized(client: AsyncClient, deci
 
 
 @pytest.mark.asyncio
-async def test_pass_decision_without_notes_succeeds(client: AsyncClient):
+async def test_pass_decision_without_notes_succeeds(authenticated_client: AsyncClient):
     """PASS decision does NOT require notes."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={
             "lot_id": TEST_LOT_ID,
@@ -247,9 +247,9 @@ async def test_pass_decision_without_notes_succeeds(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_pass_decision_with_optional_notes_succeeds(client: AsyncClient):
+async def test_pass_decision_with_optional_notes_succeeds(authenticated_client: AsyncClient):
     """PASS decision can optionally include notes."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={
             "lot_id": TEST_LOT_ID,
@@ -264,9 +264,9 @@ async def test_pass_decision_with_optional_notes_succeeds(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_invalid_decision_enum_returns_422(client: AsyncClient):
+async def test_invalid_decision_enum_returns_422(authenticated_client: AsyncClient):
     """Invalid decision enum value must return 422."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={
             "lot_id": TEST_LOT_ID,
@@ -282,10 +282,10 @@ async def test_invalid_decision_enum_returns_422(client: AsyncClient):
     ["pass", "HOLD ", "fail", "PASSED", "REJECT", ""],
 )
 async def test_various_invalid_decision_values_return_422(
-    client: AsyncClient, invalid_decision: str
+    authenticated_client: AsyncClient, invalid_decision: str
 ):
     """Various invalid decision values must return 422."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={
             "lot_id": TEST_LOT_ID,
@@ -300,13 +300,13 @@ async def test_various_invalid_decision_values_return_422(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("decision", ["PASS", "HOLD", "FAIL"])
-async def test_all_valid_decisions_work(client: AsyncClient, decision: str):
+async def test_all_valid_decisions_work(authenticated_client: AsyncClient, decision: str):
     """All valid decision enum values should work (with notes for HOLD/FAIL)."""
     payload = {"lot_id": TEST_LOT_ID, "decision": decision}
     if decision in ("HOLD", "FAIL"):
         payload["notes"] = f"Required notes for {decision} decision"
 
-    response = await client.post("/api/qc-decisions", json=payload)
+    response = await authenticated_client.post("/api/qc-decisions", json=payload)
     assert response.status_code == 201
     assert response.json()["decision"] == decision
 
@@ -315,9 +315,9 @@ async def test_all_valid_decisions_work(client: AsyncClient, decision: str):
 
 
 @pytest.mark.asyncio
-async def test_qc_decision_with_all_optional_fields(client: AsyncClient):
+async def test_qc_decision_with_all_optional_fields(authenticated_client: AsyncClient):
     """QC decision can include all optional fields."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={
             "lot_id": TEST_LOT_ID,
@@ -336,9 +336,9 @@ async def test_qc_decision_with_all_optional_fields(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_missing_lot_id_returns_422(client: AsyncClient):
+async def test_missing_lot_id_returns_422(authenticated_client: AsyncClient):
     """Missing lot_id (required field) must return 422."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={
             "decision": "PASS",
@@ -348,9 +348,9 @@ async def test_missing_lot_id_returns_422(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_missing_decision_returns_422(client: AsyncClient):
+async def test_missing_decision_returns_422(authenticated_client: AsyncClient):
     """Missing decision (required field) must return 422."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={
             "lot_id": TEST_LOT_ID,
@@ -360,9 +360,9 @@ async def test_missing_decision_returns_422(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_missing_both_required_fields_returns_422(client: AsyncClient):
+async def test_missing_both_required_fields_returns_422(authenticated_client: AsyncClient):
     """Missing both lot_id and decision (required fields) must return 422."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={
             "temperature_c": 5.0,
@@ -372,9 +372,9 @@ async def test_missing_both_required_fields_returns_422(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_empty_payload_returns_422(client: AsyncClient):
+async def test_empty_payload_returns_422(authenticated_client: AsyncClient):
     """Empty payload must return 422 due to missing required fields."""
-    response = await client.post(
+    response = await authenticated_client.post(
         "/api/qc-decisions",
         json={},
     )

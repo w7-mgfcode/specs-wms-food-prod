@@ -5,9 +5,9 @@
     'decision': 'PASS',
     'digital_signature': None,
     'id': 'NORMALIZED',
-    'lot_id': None,
+    'lot_id': '00000000-0000-0000-0000-000000000001',
     'notes': 'Snapshot test notes',
-    'operator_id': None,
+    'operator_id': '00000000-0000-0000-0000-000000000099',
     'qc_gate_id': None,
     'temperature_c': '4.0',
   })

@@ -79,20 +79,20 @@ async def test_lots(db_session: AsyncSession) -> dict[str, Lot]:
 
 
 @pytest.mark.asyncio
-async def test_traceability_returns_200(client: AsyncClient, test_lots: dict):
+async def test_traceability_returns_200(authenticated_client: AsyncClient, test_lots: dict):
     """Traceability endpoint should return 200 for existing lot."""
-    response = await client.get("/api/traceability/MIX-BATCH-88")
+    response = await authenticated_client.get("/api/traceability/MIX-BATCH-88")
     assert response.status_code == 200
 
 
 @pytest.mark.asyncio
-async def test_traceability_response_shape(client: AsyncClient, test_lots: dict):
+async def test_traceability_response_shape(authenticated_client: AsyncClient, test_lots: dict):
     """
     Traceability response shape must match Node/Express.
 
     Expected: {"central": {...}, "parents": [...], "children": [...]}
     """
-    response = await client.get("/api/traceability/MIX-BATCH-88")
+    response = await authenticated_client.get("/api/traceability/MIX-BATCH-88")
     data = response.json()
 
     # Must have exactly these keys
@@ -115,9 +115,9 @@ async def test_traceability_response_shape(client: AsyncClient, test_lots: dict)
 
 
 @pytest.mark.asyncio
-async def test_traceability_for_leaf_lot(client: AsyncClient, test_lots: dict):
+async def test_traceability_for_leaf_lot(authenticated_client: AsyncClient, test_lots: dict):
     """Leaf lot (FG) should have parents but no children."""
-    response = await client.get("/api/traceability/FG-DONER-X1")
+    response = await authenticated_client.get("/api/traceability/FG-DONER-X1")
     data = response.json()
 
     assert data["central"]["lot_code"] == "FG-DONER-X1"
@@ -126,9 +126,9 @@ async def test_traceability_for_leaf_lot(client: AsyncClient, test_lots: dict):
 
 
 @pytest.mark.asyncio
-async def test_traceability_for_root_lot(client: AsyncClient, test_lots: dict):
+async def test_traceability_for_root_lot(authenticated_client: AsyncClient, test_lots: dict):
     """Root lot (RAW) should have children but no parents."""
-    response = await client.get("/api/traceability/RAW-BEEF-001")
+    response = await authenticated_client.get("/api/traceability/RAW-BEEF-001")
     data = response.json()
 
     assert data["central"]["lot_code"] == "RAW-BEEF-001"
@@ -137,13 +137,13 @@ async def test_traceability_for_root_lot(client: AsyncClient, test_lots: dict):
 
 
 @pytest.mark.asyncio
-async def test_traceability_success_snapshot(client: AsyncClient, test_lots: dict, snapshot):
+async def test_traceability_success_snapshot(authenticated_client: AsyncClient, test_lots: dict, snapshot):
     """
     Snapshot test: Traceability success response.
 
     Golden snapshot captures response structure with normalized dynamic fields.
     """
-    response = await client.get("/api/traceability/MIX-BATCH-88")
+    response = await authenticated_client.get("/api/traceability/MIX-BATCH-88")
     assert response.status_code == 200
 
     data = response.json()
@@ -164,31 +164,31 @@ async def test_traceability_success_snapshot(client: AsyncClient, test_lots: dic
 
 
 @pytest.mark.asyncio
-async def test_traceability_returns_404_for_unknown_lot(client: AsyncClient):
+async def test_traceability_returns_404_for_unknown_lot(authenticated_client: AsyncClient):
     """Traceability endpoint should return 404 for unknown lot."""
-    response = await client.get("/api/traceability/UNKNOWN-LOT")
+    response = await authenticated_client.get("/api/traceability/UNKNOWN-LOT")
     assert response.status_code == 404
 
 
 @pytest.mark.asyncio
-async def test_traceability_not_found_snapshot(client: AsyncClient, snapshot):
+async def test_traceability_not_found_snapshot(authenticated_client: AsyncClient, snapshot):
     """
     Snapshot test: Traceability 404 response.
 
     Golden snapshot captures error format.
     """
-    response = await client.get("/api/traceability/NONEXISTENT-LOT-CODE")
+    response = await authenticated_client.get("/api/traceability/NONEXISTENT-LOT-CODE")
     assert response.status_code == 404
 
     assert response.json() == snapshot
 
 
 @pytest.mark.asyncio
-async def test_traceability_empty_lot_code_returns_404(client: AsyncClient):
+async def test_traceability_empty_lot_code_returns_404(authenticated_client: AsyncClient):
     """Empty lot code in URL should return 404 (or route not matched)."""
     # Note: FastAPI routing may handle this differently
     # This tests the behavior when a valid-looking but non-existent code is used
-    response = await client.get("/api/traceability/---")
+    response = await authenticated_client.get("/api/traceability/---")
     assert response.status_code == 404
 
 
@@ -197,7 +197,7 @@ async def test_traceability_empty_lot_code_returns_404(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_traceability_special_characters_in_lot_code(
-    client: AsyncClient, db_session: AsyncSession
+    authenticated_client: AsyncClient, db_session: AsyncSession
 ):
     """Lot codes with special characters should be handled correctly."""
     # Create a lot with special characters in the code
@@ -211,14 +211,14 @@ async def test_traceability_special_characters_in_lot_code(
     await db_session.commit()
 
     # URL encoding should handle the slash
-    response = await client.get("/api/traceability/LOT-2026%2F01%2F18-A")
+    response = await authenticated_client.get("/api/traceability/LOT-2026%2F01%2F18-A")
     # Encoded slashes are treated as path separators by Starlette/FastAPI
     assert response.status_code == 404
 
 
 @pytest.mark.asyncio
 async def test_traceability_isolated_lot_has_no_relatives(
-    client: AsyncClient, db_session: AsyncSession
+    authenticated_client: AsyncClient, db_session: AsyncSession
 ):
     """A lot with no genealogy links should have empty parents and children."""
     # Create an isolated lot
@@ -231,7 +231,7 @@ async def test_traceability_isolated_lot_has_no_relatives(
     db_session.add(isolated_lot)
     await db_session.commit()
 
-    response = await client.get("/api/traceability/ISOLATED-LOT-001")
+    response = await authenticated_client.get("/api/traceability/ISOLATED-LOT-001")
     assert response.status_code == 200
 
     data = response.json()
@@ -241,9 +241,9 @@ async def test_traceability_isolated_lot_has_no_relatives(
 
 
 @pytest.mark.asyncio
-async def test_traceability_central_lot_fields_complete(client: AsyncClient, test_lots: dict):
+async def test_traceability_central_lot_fields_complete(authenticated_client: AsyncClient, test_lots: dict):
     """Central lot in response should have all expected fields."""
-    response = await client.get("/api/traceability/MIX-BATCH-88")
+    response = await authenticated_client.get("/api/traceability/MIX-BATCH-88")
     data = response.json()
 
     central = data["central"]
