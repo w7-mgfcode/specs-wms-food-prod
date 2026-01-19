@@ -7,7 +7,7 @@
     'lot_type': 'RAW',
     'metadata': dict({
     }),
-    'operator_id': None,
+    'operator_id': '00000000-0000-0000-0000-000000000099',
     'phase_id': None,
     'production_run_id': None,
     'temperature_c': '4.0',

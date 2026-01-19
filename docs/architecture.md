@@ -4,9 +4,9 @@
 
 Flow-Viz React is a **food production traceability system** designed for manufacturing environments. The system provides real-time visualization of production flows, lot tracking with full genealogy, and quality control gate management.
 
-### Migration Strategy (Phase 1-4)
+### Migration Strategy (Phase 1-5)
 
-**Status**: ✅ **Phase 4 Complete** — Frontend fully integrated with FastAPI backend
+**Status**: ✅ **Phase 5 Complete** — Security hardening with RBAC and rate limiting
 
 Migration from Node/Express + Supabase to **FastAPI** using the **strangler pattern**:
 
@@ -16,7 +16,16 @@ Migration from Node/Express + Supabase to **FastAPI** using the **strangler patt
 | **Phase 2** | ✅ Complete | Core API endpoints (lots, runs, QC, auth, traceability) |
 | **Phase 3** | ✅ Complete | First Flow lane-based UI with buffer visualization |
 | **Phase 4** | ✅ Complete | Frontend-FastAPI integration, API client layer, TanStack Query |
-| **Phase 5** | 🔄 Planned | Component migration, refresh tokens, offline support |
+| **Phase 5** | ✅ Complete | Security hardening: RBAC, rate limiting, enhanced JWT |
+| **Phase 6** | 🔄 Planned | Secrets management, infrastructure hardening, monitoring |
+
+**Phase 5 Achievements** (Security Hardening):
+- ✅ Role-Based Access Control (RBAC) with FastAPI dependency injection
+- ✅ Rate limiting with SlowAPI + Valkey (10/min login, 100-200/min endpoints)
+- ✅ Enhanced JWT tokens with role claims for efficient authorization
+- ✅ Comprehensive test coverage (487-line RBAC + 131-line rate limiting suites)
+- ✅ ADR-0003 documenting RBAC design decisions
+- ✅ 100% backward compatibility with existing frontend
 
 **Phase 4 Achievements**:
 - ✅ Hybrid API client with generated types and handwritten wrapper
@@ -82,19 +91,21 @@ Migration from Node/Express + Supabase to **FastAPI** using the **strangler patt
 |  +------------------------------------------------------------------+  |
 |  |                    FastAPI (Port 8000)                           |  |
 |  |  +------------------------------------------------------------+  |  |
-|  |  | Endpoints                                                  |  |  |
+|  |  | Endpoints (RBAC Protected - Phase 5)                       |  |  |
 |  |  | - /api/v1/lots        - /api/v1/runs                       |  |  |
 |  |  | - /api/v1/qc-gates    - /api/v1/auth                       |  |  |
 |  |  | - /api/v1/traceability - /api/health                       |  |  |
 |  |  +------------------------------------------------------------+  |  |
 |  |  +------------------------------------------------------------+  |  |
-|  |  | Middleware (Phase 4)                                       |  |  |
+|  |  | Middleware (Phase 4-5)                                     |  |  |
 |  |  | - CORS (env-driven origins)                                |  |  |
-|  |  | - JWT Authentication                                       |  |  |
+|  |  | - JWT Authentication (role claims - Phase 5)               |  |  |
+|  |  | - Rate Limiting (SlowAPI + Valkey - Phase 5)               |  |  |
 |  |  | - Request Validation (Pydantic)                            |  |  |
 |  |  +------------------------------------------------------------+  |  |
 |  |  +------------------------------------------------------------+  |  |
 |  |  | Components                                                 |  |  |
+|  |  | - RBAC Dependencies (require_roles - Phase 5)              |  |  |
 |  |  | - Pydantic Schemas (request/response validation)           |  |  |
 |  |  | - SQLAlchemy Models (async ORM)                            |  |  |
 |  |  | - Celery Tasks (background jobs)                           |  |  |
@@ -237,16 +248,18 @@ export const queryKeys = {
    - Generates types from FastAPI OpenAPI schema
    - Optional (can use handwritten types in `types.ts`)
 
-### Backend (FastAPI) - Phases 1-4
+### Backend (FastAPI) - Phases 1-5
 
 | Component | Purpose |
 |-----------|---------|
-| **Routes** | `/api/v1/*` endpoints for lots, runs, QC, auth, traceability |
+| **Routes** | `/api/v1/*` endpoints for lots, runs, QC, auth, traceability (RBAC protected - Phase 5) |
+| **RBAC Dependencies** | `require_roles()` factory + role-specific type aliases (Phase 5) |
+| **Rate Limiting** | SlowAPI limiter with Valkey backend (Phase 5) |
 | **Models** | SQLAlchemy 2.0 async models for all domain entities |
 | **Schemas** | Pydantic 2.11+ schemas for request/response validation |
 | **Services** | Business logic layer (lot service, QC service, etc.) |
 | **Tasks** | Celery background tasks for batch operations |
-| **Middleware** | CORS (env-driven), JWT auth, request validation (Phase 4) |
+| **Middleware** | CORS (env-driven), JWT auth (role claims - Phase 5), rate limiting (Phase 5) |
 
 ### Database Schema
 
@@ -323,15 +336,32 @@ export const queryKeys = {
    +-> Display summary modal
 ```
 
-### Role-Based Access Control
+### Role-Based Access Control (Phase 5 - RBAC Enforcement)
 
-| Role | Dashboard | Command | Validator | First Flow | Admin |
-|------|:---------:|:-------:|:---------:|:----------:|:-----:|
-| VIEWER | View | - | - | View | - |
-| OPERATOR | View | Interact | - | Interact | - |
-| MANAGER | View | Interact | View | Interact | - |
-| AUDITOR | View | - | View | View | - |
-| ADMIN | View | Interact | View | Interact | Full |
+**Implementation**: FastAPI dependency injection with `require_roles()` factory
+
+| Role | Dashboard | Command | Validator | First Flow | Admin | API Permissions |
+|------|:---------:|:-------:|:---------:|:----------:|:-----:|-----------------|
+| VIEWER | View | - | - | View | - | GET only (traceability, lots) |
+| OPERATOR | View | Interact | - | Interact | - | GET + POST (lots, QC decisions) |
+| MANAGER | View | Interact | View | Interact | - | GET + POST (lots, QC decisions) |
+| AUDITOR | View | - | View | View | - | GET + POST (QC decisions only) |
+| ADMIN | View | Interact | View | Interact | Full | Full access (all endpoints) |
+
+**RBAC Type Aliases** (Phase 5):
+- `AdminOnly` — ADMIN role only
+- `AdminOrManager` — ADMIN or MANAGER roles
+- `CanCreateLots` — ADMIN, MANAGER, or OPERATOR roles
+- `CanMakeQCDecisions` — ADMIN, MANAGER, AUDITOR, or OPERATOR roles
+- `AllAuthenticated` — Any authenticated user (all 5 roles)
+
+**Rate Limits** (Phase 5):
+- Login: `10/minute` (brute-force protection)
+- Lots (GET): `200/minute`
+- Lots (POST): `100/minute` (normal factory throughput)
+- QC Decisions: `100/minute`
+- Traceability: `200/minute`
+- Health: `200/minute`
 
 ---
 
@@ -348,15 +378,16 @@ export const queryKeys = {
 - **Vite 6** — Build tool with proxy to FastAPI
 - **Zod 4.x** — Schema validation (frontend)
 
-### Backend (FastAPI - Phases 1-4)
+### Backend (FastAPI - Phases 1-5)
 - **Python 3.13+** — Runtime
 - **FastAPI ≥0.125** — Web framework
 - **SQLAlchemy 2.0.x** — Async ORM
 - **Pydantic 2.11+** — Validation (backend)
 - **Alembic 1.14+** — Database migrations
 - **Celery 5.4+** — Task queue
-- **Valkey 8.1+** — Caching (Redis OSS fork)
-- **python-jose** — JWT token handling (Phase 4)
+- **Valkey 8.1+** — Caching + rate limiting storage (Redis OSS fork)
+- **SlowAPI ≥0.1.9** — Rate limiting middleware (Phase 5)
+- **python-jose** — JWT token handling (Phase 4-5)
 - **bcrypt** — Password hashing
 - **email-validator** — Email validation
 
@@ -411,45 +442,74 @@ services:
 
 ## Security Considerations
 
+### Phase 5 Security Enhancements (RBAC & Rate Limiting)
+
+1. **Role-Based Access Control (RBAC)**:
+   - ✅ FastAPI dependency injection with `require_roles()` factory
+   - ✅ 5-tier role permissions (ADMIN, MANAGER, AUDITOR, OPERATOR, VIEWER)
+   - ✅ Type-safe role aliases (`CanCreateLots`, `CanMakeQCDecisions`, etc.)
+   - ✅ 403 responses with `X-Required-Roles` header for debugging
+   - ✅ Comprehensive test coverage (487-line RBAC test suite)
+   - ✅ ADR-0003 documenting design decisions
+
+2. **Rate Limiting** (Brute-Force Prevention):
+   - ✅ SlowAPI middleware with Valkey backend
+   - ✅ Per-endpoint limits (10/min login, 100-200/min API endpoints)
+   - ✅ Fixed-window strategy with distributed storage
+   - ✅ Rate limit headers (`X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`)
+   - ✅ 429 responses with `Retry-After` header
+   - ✅ Comprehensive test coverage (131-line rate limiting test suite)
+
+3. **Enhanced JWT Tokens**:
+   - ✅ Role claims embedded in token payload for efficient authorization
+   - ✅ No database lookup required for role validation
+   - ✅ Backward compatible with Phase 4 frontend
+   - ✅ Token payload: `{"sub": "user-id", "role": "OPERATOR", "exp": 1234567890}`
+
 ### Phase 4 Security Enhancements
 
-1. **JWT Token Management** (XSS Protection):
+4. **JWT Token Management** (XSS Protection):
    - ✅ Tokens stored in **memory** (module closure in `client.ts`)
    - ✅ Never in `localStorage` or `sessionStorage` (vulnerable to XSS)
    - ✅ Cleared on 401 response
    - ✅ Lost on page refresh (acceptable tradeoff)
-   - ⏳ Future: Refresh tokens with HttpOnly cookies (Phase 5)
+   - ⏳ Future: Refresh tokens with HttpOnly cookies (Phase 6)
 
-2. **CORS Configuration** (Environment-Driven):
+5. **CORS Configuration** (Environment-Driven):
    - ✅ Explicit origin list (not `["*"]`)
    - ✅ `allow_credentials=True` requires explicit origins
    - ✅ Environment-driven via `ALLOWED_ORIGINS` env var
    - ✅ Development: `http://localhost:5173,http://localhost:3000`
    - ✅ Production: `https://flowviz.example.com`
 
-3. **Error Handling** (Security-Aware):
+6. **Error Handling** (Security-Aware):
    - ✅ 401 → Automatic redirect to `/login` (no sensitive data exposed)
    - ✅ 403 → Toast notification (no stack traces)
    - ✅ 5xx → Generic error message (no internal details leaked)
    - ✅ Error boundaries prevent app crashes
 
-4. **Authentication** — JWT tokens with bcrypt password hashing
+### General Security Practices
 
-5. **Authorization** — Role-based access control (RBAC)
+7. **Authentication** — JWT tokens with bcrypt password hashing
 
-6. **Row Level Security** — Database-level access policies (optional)
+8. **Authorization** — Role-based access control (RBAC) with FastAPI dependencies (Phase 5)
 
-7. **API Security** — Rate limiting, CORS, input validation
+9. **Row Level Security** — Database-level access policies (optional)
 
-8. **Data Validation** — Pydantic schemas (backend), Zod schemas (frontend)
+10. **API Security** — Rate limiting (Phase 5), CORS, input validation
 
-9. **Secrets Management** — Environment variables, never committed
+11. **Data Validation** — Pydantic schemas (backend), Zod schemas (frontend)
+
+12. **Secrets Management** — Environment variables, never committed (Phase 6: AWS Secrets Manager)
 
 ### Security Best Practices
 
 | Practice | Implementation |
 |----------|----------------|
+| **RBAC** | FastAPI dependency injection (Phase 5) |
+| **Rate Limiting** | SlowAPI + Valkey (Phase 5) |
 | **Token Storage** | Memory (module closure), not localStorage |
+| **JWT Claims** | Role embedded for efficient authorization (Phase 5) |
 | **CORS** | Env-driven explicit origins |
 | **Password Hashing** | bcrypt with salt rounds |
 | **JWT Expiry** | 30 minutes (configurable) |
@@ -457,6 +517,7 @@ services:
 | **Input Validation** | Pydantic (backend) + Zod (frontend) |
 | **SQL Injection** | SQLAlchemy parameterized queries |
 | **XSS Protection** | React auto-escaping + CSP headers |
+| **Brute-Force Prevention** | 10/min login rate limit (Phase 5) |
 
 ---
 
@@ -495,22 +556,29 @@ npm run generate:api
 - [Phase 1 Backend Summary](phase/phase-1_backend.md) — FastAPI backend scaffold
 - [Phase 2 API Backend Summary](phase/phase-2_api-backend.md) — Core API endpoints
 - [Phase 3 First Flow Summary](phase/phase-3_first-flow.md) — Lane-based UI
-- [Phase 4 Frontend-FastAPI Integration](phase/phase-4_frontend-fastapi-integration.md) — **NEW** ✨
+- [Phase 4 Frontend-FastAPI Integration](phase/phase-4_frontend-fastapi-integration.md)
+- [Phase 5 Security Hardening](phase/phase-5_security-hardening-rbac-ratelimit.md) — **NEW** ✨
 
 ### Technical Documentation
-- [ENVIRONMENT.md](ENVIRONMENT.md) — Environment variables (Phase 4) - **NEW**
-- [RUNBOOK.md](RUNBOOK.md) — Error scenarios and recovery (Phase 4) - **NEW**
+- [ENVIRONMENT.md](ENVIRONMENT.md) — Environment variables
+- [RUNBOOK.md](RUNBOOK.md) — Error scenarios and recovery
 - [CLAUDE.md - AI Coding Guide](../CLAUDE.md)
 - [Architecture Decision Records](decisions/)
+  - [ADR-0003: RBAC Enforcement](decisions/0003-rbac-enforcement.md) — **NEW** ✨ (Phase 5)
 
 ### Code Documentation
 - [Database Migrations](../backend/alembic/)
 - [API Tests](../backend/tests/)
+  - [RBAC Test Suite](../backend/tests/test_rbac.py) — **NEW** ✨ (Phase 5)
+  - [Rate Limiting Tests](../backend/tests/test_rate_limiting.py) — **NEW** ✨ (Phase 5)
 - [Frontend Types](../flow-viz-react/src/types/)
 - [Flow Types](../flow-viz-react/src/types/flow.ts)
-- [API Client](../flow-viz-react/src/lib/api/) — Phase 4 - **NEW**
-- [Query Hooks](../flow-viz-react/src/hooks/) — Phase 4 - **NEW**
+- [API Client](../flow-viz-react/src/lib/api/)
+- [Query Hooks](../flow-viz-react/src/hooks/)
+- [RBAC Dependencies](../backend/app/api/deps.py) — **UPDATED** (Phase 5)
+- [Rate Limiter Config](../backend/app/rate_limit.py) — **NEW** ✨ (Phase 5)
 
 ### PRPs (Pydantic AI Agent Templates)
-- [Phase 4 Frontend-FastAPI Integration PRP](../PRPs/phase4-frontend-fastapi-integration.md) - **NEW**
-- [Phase 4 Security & Error Handling PRP](../PRPs/phase4-security-error-handling.md) - **NEW**
+- [Phase 5 Security Hardening PRP](../PRPs/phase5-security-hardening-rbac-ratelimit.md) - **NEW** ✨
+- [Phase 4 Frontend-FastAPI Integration PRP](../PRPs/phase4-frontend-fastapi-integration.md)
+- [Phase 4 Security & Error Handling PRP](../PRPs/phase4-security-error-handling.md)
