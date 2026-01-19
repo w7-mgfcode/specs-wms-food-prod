@@ -65,8 +65,7 @@ class Settings(BaseSettings):
             # Ensure debug is disabled in production
             if self.debug:
                 raise ValueError(
-                    "DEBUG must be False in production. "
-                    "Set DEBUG=false in environment."
+                    "DEBUG must be False in production. Set DEBUG=false in environment."
                 )
 
 

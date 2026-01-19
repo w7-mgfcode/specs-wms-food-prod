@@ -1,6 +1,6 @@
 """Health check endpoint - must match Node/Express response shape."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter
 
@@ -20,5 +20,5 @@ async def health_check() -> dict:
     """
     return {
         "status": "ok",
-        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
     }

@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional, Self
+from typing import Self
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -17,20 +17,21 @@ class QCDecisionCreate(BaseModel):
     Note: HOLD and FAIL decisions require notes (min 10 chars per CLAUDE.md).
     """
 
-    lot_id: Optional[UUID] = None
-    qc_gate_id: Optional[UUID] = None
-    operator_id: Optional[UUID] = None
-    decision: Optional[Decision] = None
-    notes: Optional[str] = Field(None, max_length=1000)
-    temperature_c: Optional[Decimal] = Field(None, ge=-50, le=100)
-    digital_signature: Optional[str] = None
+    lot_id: UUID | None = None
+    qc_gate_id: UUID | None = None
+    operator_id: UUID | None = None
+    decision: Decision | None = None
+    notes: str | None = Field(None, max_length=1000)
+    temperature_c: Decimal | None = Field(None, ge=-50, le=100)
+    digital_signature: str | None = None
 
     @model_validator(mode="after")
     def validate_notes_for_hold_fail(self) -> Self:
         """Validate that HOLD/FAIL decisions have notes."""
-        if self.decision in (Decision.HOLD, Decision.FAIL):
-            if not self.notes or len(self.notes.strip()) < 10:
-                raise ValueError("Notes required for HOLD/FAIL decisions (min 10 chars)")
+        if self.decision in (Decision.HOLD, Decision.FAIL) and (
+            not self.notes or len(self.notes.strip()) < 10
+        ):
+            raise ValueError("Notes required for HOLD/FAIL decisions (min 10 chars)")
         return self
 
 
@@ -44,11 +45,11 @@ class QCDecisionResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
-    lot_id: Optional[UUID] = None
-    qc_gate_id: Optional[UUID] = None
-    operator_id: Optional[UUID] = None
-    decision: Optional[Decision] = None
-    notes: Optional[str] = None
-    temperature_c: Optional[Decimal] = None
-    digital_signature: Optional[str] = None
+    lot_id: UUID | None = None
+    qc_gate_id: UUID | None = None
+    operator_id: UUID | None = None
+    decision: Decision | None = None
+    notes: str | None = None
+    temperature_c: Decimal | None = None
+    digital_signature: str | None = None
     decided_at: datetime

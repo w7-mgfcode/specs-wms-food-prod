@@ -32,7 +32,7 @@ async def _calculate_deep_genealogy_async(lot_id: str) -> dict[str, Any]:
 
     from app.cache import get_traceability_cache_key, set_cache
     from app.database import async_session_maker
-    from app.models.lot import Lot, LotGenealogy
+    from app.models.lot import Lot
 
     # Parse lot_id to UUID once at entry point
     try:
@@ -127,18 +127,18 @@ async def _traverse_genealogy(
 
         for related_lot, quantity in result.all():
             if related_lot.id not in visited:
-                results.append({
-                    "id": str(related_lot.id),
-                    "lot_code": related_lot.lot_code,
-                    "lot_type": (
-                        related_lot.lot_type.value if related_lot.lot_type else None
-                    ),
-                    "weight_kg": (
-                        float(related_lot.weight_kg) if related_lot.weight_kg else None
-                    ),
-                    "quantity_used_kg": float(quantity) if quantity else None,
-                    "depth": depth + 1,
-                })
+                results.append(
+                    {
+                        "id": str(related_lot.id),
+                        "lot_code": related_lot.lot_code,
+                        "lot_type": (related_lot.lot_type.value if related_lot.lot_type else None),
+                        "weight_kg": (
+                            float(related_lot.weight_kg) if related_lot.weight_kg else None
+                        ),
+                        "quantity_used_kg": float(quantity) if quantity else None,
+                        "depth": depth + 1,
+                    }
+                )
                 queue.append((related_lot.id, depth + 1))
 
     return results

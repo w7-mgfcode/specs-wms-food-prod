@@ -1,7 +1,7 @@
 """Redis/Valkey cache client."""
 
 import json
-from typing import Any, Optional
+from typing import Any
 
 import redis.asyncio as redis
 
@@ -15,7 +15,7 @@ redis_client: redis.Redis = redis.from_url(
 )
 
 
-async def get_cache(key: str) -> Optional[Any]:
+async def get_cache(key: str) -> Any | None:
     """Get a value from cache."""
     value = await redis_client.get(key)
     if value is not None:
