@@ -9,9 +9,11 @@ export default defineConfig({
     open: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:8000',  // FastAPI backend
         changeOrigin: true,
-        secure: false
+        secure: false,
+        // WebSocket support for future features
+        ws: true,
       }
     }
   }

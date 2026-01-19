@@ -1,113 +1,62 @@
 import { create } from 'zustand';
-import { supabase, isMockMode } from '../lib/supabase';
-import type { Database } from '../types/database.types';
-
-type User = Database['public']['Tables']['users']['Row'];
-type Role = User['role'];
+import { devtools } from 'zustand/middleware';
+import * as authApi from '../lib/api/auth';
+import type { User, UserRole } from '../lib/api/types';
 
 interface AuthState {
-    user: User | null;
-    role: Role | null;
-    isLoading: boolean;
-    error: string | null;
-    login: (email: string, role?: Role) => Promise<void>;
-    logout: () => Promise<void>;
-    checkSession: () => Promise<void>;
+  user: User | null;
+  role: UserRole | null;
+  isLoading: boolean;
+  error: string | null;
+
+  // Actions
+  login: (email: string, role?: UserRole) => Promise<void>;
+  logout: () => void;
+  clearError: () => void;
+  checkSession: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-    user: null,
-    role: null,
-    isLoading: false,
-    error: null,
+export const useAuthStore = create<AuthState>()(
+  devtools(
+    (set) => ({
+      user: null,
+      role: null,
+      isLoading: false,
+      error: null,
 
-    login: async (email, role = 'VIEWER') => {
-        set({ isLoading: true });
-
-        if (isMockMode()) {
-            // Mock Login
-            setTimeout(() => {
-                const mockUser: User = {
-                    id: 'mock-user-id',
-                    email,
-                    full_name: 'Mock User',
-                    role: role,
-                    created_at: new Date().toISOString(),
-                    last_login: new Date().toISOString()
-                };
-                set({ user: mockUser, role: role, isLoading: false });
-            }, 500);
-            return;
-        }
-
-        if (import.meta.env.VITE_DB_MODE === 'postgres') {
-            try {
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error || 'Login failed');
-                }
-
-                const data = await response.json();
-                // Map DB row keys if necessary, or just use as is
-                set({ user: data.user, role: data.user.role, isLoading: false, error: null });
-                return;
-            } catch (e: any) {
-                set({ error: e.message, isLoading: false });
-                return;
-            }
-        }
+      login: async (email: string, _role?: UserRole) => {
+        set({ isLoading: true, error: null });
 
         try {
-            if (!supabase) throw new Error("Supabase client not initialized");
-
-            const { error } = await supabase.auth.signInWithOtp({
-                email,
-                options: { shouldCreateUser: false } // Assuming users are pre-registered
-            });
-
-            if (error) {
-                set({ error: error.message, isLoading: false });
-                return;
-            }
-
-            // Note: Since OTP sends an email, we might just set a "check your email" state ideally.
-            // But for a "Finish Login" task in a dev environment with potential Mock users, 
-            // if we are in 'supabase' mode, we rely on Supabase.
-            // However, the PRD/Docs imply Role-Based Access. 
-            // We need to fetch the USER PROFILE to get the role.
-
-            // Wait, signInWithOtp doesn't return the session immediately (it waits for link click).
-            // Maybe we should use signInWithPassword for testing if we have passwords?
-            // PRD doesn't specify auth method deeply, but "Magic Link" is default Supabase.
-
-            // Let's assume for this "finish" task, we want to SUPPORT fetching the role after auth state change.
-            // But 'login' here initiates it.
-
-            set({ isLoading: false, error: null });
-            alert("Magic link sent to " + email); // Simple feedback for now
-
-        } catch (e: any) {
-            set({ error: e.message, isLoading: false });
+          const response = await authApi.login({ email });
+          set({
+            user: response.user,
+            role: response.user.role,
+            isLoading: false,
+            error: null,
+          });
+        } catch (e: unknown) {
+          const message = e instanceof Error ? e.message : 'Login failed';
+          set({ error: message, isLoading: false });
         }
-    },
+      },
 
-    logout: async () => {
-        if (isMockMode()) {
-            set({ user: null, role: null });
-            return;
-        }
-        await supabase?.auth.signOut();
-        set({ user: null, role: null });
-    },
+      logout: () => {
+        authApi.logout();
+        set({ user: null, role: null, error: null });
+      },
 
-    checkSession: async () => {
-        // Mock session check
+      clearError: () => {
+        set({ error: null });
+      },
+
+      checkSession: async () => {
+        // With JWT in memory, we don't persist sessions across page reloads
+        // This is intentional for security (XSS protection)
+        // For now, just mark loading as complete
         set({ isLoading: false });
-    }
-}));
+      },
+    }),
+    { name: 'AuthStore' }
+  )
+);

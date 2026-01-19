@@ -35,6 +35,14 @@ class Settings(BaseSettings):
     environment: str = "development"
     debug: bool = True
 
+    # CORS - comma-separated list of allowed origins
+    allowed_origins: str = "http://localhost:5173,http://localhost:3000"
+
+    @property
+    def cors_origins(self) -> list[str]:
+        """Parse allowed_origins string to list."""
+        return [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]
+
     @property
     def is_production(self) -> bool:
         """Check if running in production environment."""
