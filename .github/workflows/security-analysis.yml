@@ -23,7 +23,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set up Python 3.12
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.12'
 
@@ -34,28 +34,38 @@ jobs:
 
     - name: Run Bandit security scan on Backend
       run: |
-        bandit -r app -f json -o bandit-backend.json || true
-        bandit -r app -f txt | tee bandit-backend.txt || true
+        bandit -r app -f json -o bandit-backend.json
+        bandit -r app -f txt | tee bandit-backend.txt
 
     - name: Generate SARIF output for GitHub
       run: |
-        bandit -r app -f sarif -o bandit-backend.sarif || true
+        bandit -r app -f sarif -o bandit-backend.sarif
 
     - name: Check for high severity issues
       run: |
+        # Validate bandit-backend.json exists
+        if [ ! -f bandit-backend.json ]; then
+          echo "❌ bandit-backend.json not found - Bandit scan failed to produce output"
+          exit 1
+        fi
+
+        # Validate JSON is parseable
+        if ! jq empty bandit-backend.json 2>/dev/null; then
+          echo "❌ bandit-backend.json is not valid JSON"
+          exit 1
+        fi
+
         # Check Backend results
-        if [ -f bandit-backend.json ]; then
-          HIGH_ISSUES=$(jq '[.results[] | select(.issue_severity == "HIGH")] | length' bandit-backend.json)
-          MEDIUM_ISSUES=$(jq '[.results[] | select(.issue_severity == "MEDIUM")] | length' bandit-backend.json)
+        HIGH_ISSUES=$(jq '[.results[] | select(.issue_severity == "HIGH")] | length' bandit-backend.json)
+        MEDIUM_ISSUES=$(jq '[.results[] | select(.issue_severity == "MEDIUM")] | length' bandit-backend.json)
 
-          echo "Backend - High severity issues: $HIGH_ISSUES"
-          echo "Backend - Medium severity issues: $MEDIUM_ISSUES"
+        echo "Backend - High severity issues: $HIGH_ISSUES"
+        echo "Backend - Medium severity issues: $MEDIUM_ISSUES"
 
-          if [ "$HIGH_ISSUES" -gt 0 ]; then
-            echo "❌ High severity security issues found in Backend!"
-            jq -r '.results[] | select(.issue_severity == "HIGH") | "HIGH: \(.test_id) in \(.filename):\(.line_number) - \(.issue_text)"' bandit-backend.json
-            exit 1
-          fi
+        if [ "$HIGH_ISSUES" -gt 0 ]; then
+          echo "❌ High severity security issues found in Backend!"
+          jq -r '.results[] | select(.issue_severity == "HIGH") | "HIGH: \(.test_id) in \(.filename):\(.line_number) - \(.issue_text)"' bandit-backend.json
+          exit 1
         fi
 
         echo "✅ No high severity Python security issues detected"

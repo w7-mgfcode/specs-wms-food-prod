@@ -93,9 +93,18 @@ export async function apiFetch<T>(
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  // Set content type for JSON requests
+  // Set content type for JSON requests only
+  // Skip for FormData, Blob, URLSearchParams, ReadableStream (browser sets correct Content-Type)
   if (fetchOptions?.body && !headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json');
+    const body = fetchOptions.body;
+    const isFormData = body instanceof FormData;
+    const isBlob = body instanceof Blob;
+    const isURLSearchParams = body instanceof URLSearchParams;
+    const isReadableStream = typeof ReadableStream !== 'undefined' && body instanceof ReadableStream;
+
+    if (!isFormData && !isBlob && !isURLSearchParams && !isReadableStream) {
+      headers.set('Content-Type', 'application/json');
+    }
   }
 
   const url = `${getBaseUrl()}${path}`;
