@@ -1,7 +1,6 @@
 """User and authentication schemas."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr
@@ -22,10 +21,10 @@ class UserResponse(BaseModel):
 
     id: UUID
     email: str
-    full_name: Optional[str] = None
+    full_name: str | None = None
     role: UserRole
     created_at: datetime
-    last_login: Optional[datetime] = None
+    last_login: datetime | None = None
 
 
 class Token(BaseModel):
