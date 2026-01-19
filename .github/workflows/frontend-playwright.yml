@@ -24,55 +24,51 @@ env:
 jobs:
   playwright-tests:
     runs-on: ubuntu-latest
-    
+    defaults:
+      run:
+        working-directory: flow-viz-react
+
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
-      
+      uses: actions/checkout@v4
+
     - name: Set up Node.js ${{ inputs.node-version || '18' }}
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node-version || '18' }}
         cache: 'npm'
-        cache-dependency-path: '6_Agent_Deployment/frontend/package-lock.json'
-        
+        cache-dependency-path: 'flow-viz-react/package-lock.json'
+
     - name: Install dependencies
-      run: |
-        cd 6_Agent_Deployment/frontend
-        npm ci
-        
+      run: npm ci
+
     - name: Install Playwright browsers
-      run: |
-        cd 6_Agent_Deployment/frontend
-        npx playwright install --with-deps
-        
+      run: npx playwright install --with-deps
+
     - name: Create test environment file
       run: |
-        cd 6_Agent_Deployment/frontend
         cat > .env.test << EOF
         VITE_SUPABASE_URL=${{ env.VITE_SUPABASE_URL }}
         VITE_SUPABASE_ANON_KEY=${{ env.VITE_SUPABASE_ANON_KEY }}
         VITE_AGENT_ENDPOINT=${{ env.VITE_AGENT_ENDPOINT }}
         VITE_ENABLE_STREAMING=${{ env.VITE_ENABLE_STREAMING }}
         EOF
-        
+
     - name: Run Playwright tests
-      run: |
-        cd 6_Agent_Deployment/frontend
-        npm run test
-        
+      run: npm run test
+
     - name: Upload Playwright report
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: playwright-report
-        path: 6_Agent_Deployment/frontend/playwright-report/
+        path: flow-viz-react/playwright-report/
         retention-days: 30
-        
+
     - name: Upload test results
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: playwright-test-results
-        path: 6_Agent_Deployment/frontend/test-results/
+        path: flow-viz-react/test-results/
         retention-days: 30
