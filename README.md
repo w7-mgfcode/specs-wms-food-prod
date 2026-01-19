@@ -11,7 +11,21 @@
 
 ---
 
-## What's New (v0.3.0)
+## What's New (v0.4.0) 🎉
+
+- **Frontend-FastAPI Integration** — Complete migration from Supabase/mock to FastAPI backend
+- **API Client Layer** — Hybrid approach with generated types and handwritten fetch wrapper
+- **TanStack Query v5** — Server state management with smart caching and error handling
+- **Security Enhancements** — JWT tokens in memory (XSS protection), env-driven CORS
+- **Error Boundaries** — React Error Boundary with global 401/403 handlers
+- **Type Generation** — `npm run generate:api` script for OpenAPI type sync
+- **Documentation** — ENVIRONMENT.md (128 lines) and RUNBOOK.md (309 lines)
+- See [Phase 4 Summary](docs/phase/phase-4_frontend-fastapi-integration.md) for details
+
+### Previous Releases
+
+<details>
+<summary>v0.3.0 - First Flow Lane UI</summary>
 
 - **First Flow (V4)** — Interactive lane-based production flow visualization
 - **Buffer Lane UI** — 4 buffer zones (LK, MIX, SKW15, SKW30) with real-time lot tracking
@@ -20,7 +34,7 @@
 - **Temperature Badges** — Color-coded temperature status indicators
 - See [Phase 3 Summary](docs/phase/phase-3_first-flow.md) for details
 
-### Previous Releases
+</details>
 
 <details>
 <summary>v0.2.0 - Backend Migration Foundation</summary>
@@ -57,21 +71,7 @@
 - Docker & Docker Compose
 - UV package manager (recommended for Python)
 
-### Frontend Development
-
-```bash
-# Clone the repository
-git clone https://github.com/w7-mgfcode/specs-wms-food-prod.git
-cd specs-wms-food-prod/flow-viz-react
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-```
-
-### Backend Development (FastAPI)
+### Backend Development (FastAPI) - Start First!
 
 ```bash
 # Navigate to backend
@@ -83,9 +83,32 @@ docker-compose -f docker/docker-compose.yml up -d
 # Install Python dependencies with UV
 uv sync
 
-# Run FastAPI server
+# Run FastAPI server (port 8000)
 uv run uvicorn app.main:app --reload --port 8000
+
+# Verify backend is running
+curl http://localhost:8000/api/health
 ```
+
+### Frontend Development
+
+```bash
+# Clone the repository (if not already done)
+git clone https://github.com/w7-mgfcode/specs-wms-food-prod.git
+cd specs-wms-food-prod/flow-viz-react
+
+# Install dependencies
+npm install
+
+# Start development server (port 5173)
+# Automatically proxies /api requests to FastAPI (port 8000)
+npm run dev
+
+# Optional: Generate TypeScript types from OpenAPI schema
+npm run generate:api
+```
+
+**Note**: The frontend now requires the FastAPI backend to be running. The Vite dev server proxies all `/api` requests to `http://localhost:8000`.
 
 ### Using DevContainer (Recommended)
 
@@ -95,14 +118,29 @@ uv run uvicorn app.main:app --reload --port 8000
 
 ### Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `VITE_SUPABASE_URL` | Supabase project URL | For DB mode |
-| `VITE_SUPABASE_ANON_KEY` | Supabase anonymous key | For DB mode |
-| `VITE_USE_MOCK` | Enable simulation mode (`true`/`false`) | No (default: `false`) |
-| `DATABASE_URL` | PostgreSQL connection string | Backend |
-| `VALKEY_URL` | Valkey/Redis connection string | Backend |
-| `JWT_SECRET_KEY` | Secret for JWT tokens | Backend |
+**Frontend (Vite)**:
+
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `VITE_API_URL` | API base URL | No | Empty (uses Vite proxy) |
+| `VITE_DB_MODE` | Database mode | No | `mock` |
+| `VITE_USE_MOCK` | Enable simulation mode | No | `false` |
+| `VITE_SUPABASE_URL` | Supabase project URL (legacy) | No | - |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anonymous key (legacy) | No | - |
+
+**Backend (FastAPI)**:
+
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | Yes (prod) | `postgresql+asyncpg://...` |
+| `SECRET_KEY` | JWT signing key (min 32 chars) | Yes (prod) | `INSECURE-DEV-ONLY-CHANGE-ME` |
+| `ALLOWED_ORIGINS` | CORS origins (comma-separated) | No | `http://localhost:5173,...` |
+| `JWT_ALGORITHM` | JWT algorithm | No | `HS256` |
+| `JWT_EXPIRE_MINUTES` | JWT token expiry | No | `30` |
+| `REDIS_URL` | Redis/Valkey connection URL | No | `redis://localhost:6379/0` |
+| `DEBUG` | Enable debug mode | No | `true` |
+
+See [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) for complete documentation.
 
 ---
 
@@ -117,27 +155,47 @@ uv run uvicorn app.main:app --reload --port 8000
 │  └────┬────┘  └────┬────┘  └────┬────┘  └────┬─────┘  └──────┬──────┘  │
 │       └────────────┴────────────┴────────────┴───────────────┘         │
 │                          │                                               │
-│              ┌───────────┴───────────┐                                  │
-│              │    Zustand Stores     │                                  │
-│              └───────────┬───────────┘                                  │
-└──────────────────────────┼──────────────────────────────────────────────┘
-                           │
-         ┌─────────────────┼─────────────────┐
-         │                 │                 │
-         ▼                 ▼                 ▼
-┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
-│  Node/Express   │ │    FastAPI      │ │    Supabase     │
-│  (Legacy)       │ │    (New)        │ │    (BaaS)       │
-│  Port 3000      │ │    Port 8000    │ │                 │
-└────────┬────────┘ └────────┬────────┘ └────────┬────────┘
-         │                   │                   │
-         └───────────────────┴───────────────────┘
-                             │
-                    ┌────────┴────────┐
-                    │  PostgreSQL 17  │
-                    │  + Valkey 8.1   │
-                    └─────────────────┘
+│       ┌──────────────────┴──────────────────┐                          │
+│       │      State Management (Phase 4)      │                          │
+│       │  ┌────────────┐  ┌────────────────┐ │                          │
+│       │  │  Zustand   │  │ TanStack Query │ │                          │
+│       │  │ (UI State) │  │ (Server State) │ │                          │
+│       │  └────────────┘  └────────┬───────┘ │                          │
+│       └─────────────────────────────────────┘                          │
+│                                    │                                     │
+│                          ┌─────────▼─────────┐                          │
+│                          │   API Client      │                          │
+│                          │  - JWT (memory)   │                          │
+│                          │  - Error handling │                          │
+│                          │  - 401/403 logic  │                          │
+│                          └─────────┬─────────┘                          │
+└────────────────────────────────────┼──────────────────────────────────┘
+                                     │
+                          ┌──────────▼──────────┐
+                          │  Vite Dev Proxy     │
+                          │  /api → :8000       │
+                          └──────────┬──────────┘
+                                     │
+                          ┌──────────▼──────────┐
+                          │    FastAPI          │
+                          │    Port 8000        │
+                          │  - CORS (env)       │
+                          │  - JWT Auth         │
+                          │  - Pydantic         │
+                          └──────────┬──────────┘
+                                     │
+                          ┌──────────▼──────────┐
+                          │  PostgreSQL 17      │
+                          │  + Valkey 8.1       │
+                          └─────────────────────┘
 ```
+
+**Key Changes in Phase 4**:
+- ✅ **State Separation**: Zustand (UI) + TanStack Query (Server)
+- ✅ **API Client**: Hybrid pattern with JWT in memory (XSS protection)
+- ✅ **Vite Proxy**: Frontend proxies `/api` to FastAPI port 8000
+- ✅ **Security**: Environment-driven CORS, no localStorage tokens
+- ❌ **Deprecated**: Node/Express (port 3000), Supabase BaaS
 
 See [docs/architecture.md](docs/architecture.md) for detailed documentation.
 
@@ -152,7 +210,7 @@ specs-wms-food-prod/
 ├── flow-viz-react/           # React 19 frontend application
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── flow/         # First Flow components (V4) - NEW
+│   │   │   ├── flow/         # First Flow components (V4)
 │   │   │   │   ├── FirstFlowPage.tsx
 │   │   │   │   ├── BufferLane.tsx
 │   │   │   │   ├── LotCard.tsx
@@ -160,35 +218,58 @@ specs-wms-food-prod/
 │   │   │   │   └── TempBadge.tsx
 │   │   │   ├── command/      # Command Center (V2)
 │   │   │   ├── validator/    # Validator (V3)
+│   │   │   ├── ErrorBoundary.tsx  # Error boundary (Phase 4) - NEW
 │   │   │   └── ui/           # Reusable UI primitives
-│   │   ├── stores/           # Zustand state management
-│   │   │   ├── useFlowStore.ts   # Flow state (V4) - NEW
+│   │   ├── stores/           # Zustand state management (UI only)
+│   │   │   ├── useFlowStore.ts
 │   │   │   ├── useAuthStore.ts
-│   │   │   └── useProductionStore.ts
-│   │   ├── types/
-│   │   │   └── flow.ts       # Flow type definitions - NEW
-│   │   └── lib/              # Utilities & schemas
+│   │   │   ├── useProductionStore.ts
+│   │   │   └── useToastStore.ts
+│   │   ├── hooks/            # TanStack Query hooks (Phase 4) - NEW
+│   │   │   ├── useLots.ts
+│   │   │   ├── useQC.ts
+│   │   │   └── useTraceability.ts
+│   │   ├── lib/
+│   │   │   ├── api/          # API client layer (Phase 4) - NEW
+│   │   │   │   ├── client.ts      # Base fetch wrapper + JWT
+│   │   │   │   ├── types.ts       # TypeScript interfaces
+│   │   │   │   ├── auth.ts        # Login function
+│   │   │   │   ├── lots.ts        # Lot operations
+│   │   │   │   ├── qc.ts          # QC decisions
+│   │   │   │   └── traceability.ts
+│   │   │   ├── queryClient.ts     # TanStack Query config - NEW
+│   │   │   ├── db.ts         # DEPRECATED (legacy adapter)
+│   │   │   └── supabase.ts   # DEPRECATED (legacy BaaS)
+│   │   └── types/
+│   │       ├── flow.ts       # Flow type definitions
+│   │       └── database.types.ts
 │   ├── public/scenarios/     # Seed configuration data
-│   │   └── first-flow-config.json  # First Flow config - NEW
-│   └── server/               # Node/Express API (legacy)
-├── backend/                  # FastAPI backend (new)
+│   │   └── first-flow-config.json
+│   └── .env.example          # Environment template (Phase 4) - NEW
+├── backend/                  # FastAPI backend
 │   ├── app/
 │   │   ├── api/routes/       # API endpoints
 │   │   ├── models/           # SQLAlchemy models
 │   │   ├── schemas/          # Pydantic schemas
 │   │   ├── services/         # Business logic
+│   │   ├── config.py         # Settings (CORS env-driven) - UPDATED
 │   │   └── tasks/            # Celery tasks
 │   ├── alembic/              # Database migrations
 │   ├── docker/               # Docker Compose
 │   └── tests/                # Characterization tests
 ├── PRPs/                     # Pydantic AI agent templates
+│   ├── phase4-frontend-fastapi-integration.md  # Phase 4 PRP - NEW
+│   └── phase4-security-error-handling.md       # Phase 4 Security - NEW
 ├── docs/
 │   ├── architecture.md       # System architecture
 │   ├── SETUP.md              # Setup guide
+│   ├── ENVIRONMENT.md        # Environment variables (Phase 4) - NEW
+│   ├── RUNBOOK.md            # Error scenarios (Phase 4) - NEW
 │   ├── phase/                # Phase summaries
 │   │   ├── phase-1_backend.md
 │   │   ├── phase-2_api-backend.md
-│   │   └── phase-3_first-flow.md   # First Flow phase - NEW
+│   │   ├── phase-3_first-flow.md
+│   │   └── phase-4_frontend-fastapi-integration.md  # Phase 4 - NEW
 │   └── decisions/            # ADRs
 └── .github/                  # CI/CD workflows
 ```
