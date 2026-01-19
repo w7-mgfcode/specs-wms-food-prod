@@ -10,7 +10,7 @@ Implement a lane-based flow visualization with step overlay for the Phase 3 "Fir
 2. **No Backend Changes**: Uses existing data contracts (lots, genealogy, QC decisions)
 3. **Performance-First**: Smooth rendering with <100 items, no layout thrash
 4. **Role-Aware**: Read-only vs operator interactions based on user role
-5. **Accessibility**: Clear active-step cues, high contrast status badges
+5. **Accessibility**: Clear active-step cues, high-contrast status badges
 
 ---
 

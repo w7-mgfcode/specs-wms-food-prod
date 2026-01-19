@@ -11,7 +11,7 @@
 ## ✅ Docker Services Deployment
 
 ### Services Started Successfully
-```
+```text
 flowviz_db_fastapi    Up (healthy)   0.0.0.0:5433->5432/tcp
 flowviz_cache         Up (healthy)   0.0.0.0:6379->6379/tcp
 ```
@@ -87,7 +87,7 @@ flowviz_cache         Up (healthy)   0.0.0.0:6379->6379/tcp
 - ✅ GET /api/traceability/{lot_code} - Returns genealogy data
 
 ### FastAPI Server
-- **Status:** Running on http://0.0.0.0:8000
+- **Status:** Running on <http://0.0.0.0:8000>
 - **Startup:** Clean, no errors
 - **CORS:** Configured for debug mode
 - **Database:** Connected to PostgreSQL on port 5433
