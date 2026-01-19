@@ -34,11 +34,5 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e ".[dev]"
 
-    - name: Debug - Check installed package
-      run: |
-        pip list | grep flowviz
-        python -c "import sys; print('Python path:', sys.path)"
-        python -c "from app.database import JSONB_TYPE; print('JSONB_TYPE imported successfully')"
-
     - name: Run Backend tests
       run: python -m pytest tests/ -v --tb=short
