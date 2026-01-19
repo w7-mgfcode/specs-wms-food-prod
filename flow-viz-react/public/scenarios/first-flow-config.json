@@ -1,0 +1,207 @@
+{
+    "buffers": {
+        "LK": {
+            "id": "LK",
+            "name": {
+                "hu": "LK Buffer",
+                "en": "LK Buffer"
+            },
+            "tempRange": "0–4°C",
+            "lotType": "BULK",
+            "color": "#4a9eff"
+        },
+        "MIX": {
+            "id": "MIX",
+            "name": {
+                "hu": "MIX Buffer",
+                "en": "MIX Buffer"
+            },
+            "tempRange": "0–4°C",
+            "lotType": "MIX",
+            "color": "#ff6b9d"
+        },
+        "SKW15": {
+            "id": "SKW15",
+            "name": {
+                "hu": "SKW15 Buffer",
+                "en": "SKW15 Buffer"
+            },
+            "tempRange": "0–4°C",
+            "lotType": "SKW",
+            "color": "#00ff88"
+        },
+        "SKW30": {
+            "id": "SKW30",
+            "name": {
+                "hu": "SKW30 Buffer",
+                "en": "SKW30 Buffer"
+            },
+            "tempRange": "0–4°C",
+            "lotType": "SKW",
+            "color": "#ff8c42"
+        }
+    },
+    "lots": [
+        {
+            "id": "lot-001",
+            "code": "BULK-20260114-DUNA-5001",
+            "description": {
+                "hu": "Mell",
+                "en": "Breast"
+            },
+            "weight_kg": 200,
+            "temperature_c": 3.2,
+            "qcStatus": "pass",
+            "bufferId": "LK"
+        },
+        {
+            "id": "lot-002",
+            "code": "BULK-20260114-DUNA-5002",
+            "description": {
+                "hu": "Bőr",
+                "en": "Skin"
+            },
+            "weight_kg": 30,
+            "temperature_c": 2.8,
+            "qcStatus": "pass",
+            "bufferId": "LK"
+        },
+        {
+            "id": "lot-003",
+            "code": "BULK-20260114-DUNA-5003",
+            "description": {
+                "hu": "Combfilé",
+                "en": "Thigh Fillet"
+            },
+            "weight_kg": 120,
+            "temperature_c": 3.5,
+            "qcStatus": "processing",
+            "bufferId": "LK"
+        },
+        {
+            "id": "lot-004",
+            "code": "MIXLOT-20260115-DUNA-0001",
+            "description": {
+                "hu": "Mai Mix",
+                "en": "Today's Mix"
+            },
+            "weight_kg": 1070,
+            "temperature_c": 2.5,
+            "qcStatus": "pass",
+            "bufferId": "MIX"
+        },
+        {
+            "id": "lot-005",
+            "code": "SKW15-20260115-DUNA-0001",
+            "description": {
+                "hu": "15kg rudak",
+                "en": "15kg rods"
+            },
+            "quantity": 20,
+            "temperature_c": 3.0,
+            "qcStatus": "pass",
+            "bufferId": "SKW15"
+        },
+        {
+            "id": "lot-006",
+            "code": "SKW15-20260115-DUNA-0002",
+            "description": {
+                "hu": "15kg rudak",
+                "en": "15kg rods"
+            },
+            "quantity": 20,
+            "temperature_c": 3.1,
+            "qcStatus": "pending",
+            "bufferId": "SKW15"
+        },
+        {
+            "id": "lot-007",
+            "code": "SKW30-20260115-DUNA-0001",
+            "description": {
+                "hu": "30kg rudak",
+                "en": "30kg rods"
+            },
+            "quantity": 8,
+            "temperature_c": 2.9,
+            "qcStatus": "pass",
+            "bufferId": "SKW30"
+        },
+        {
+            "id": "lot-008",
+            "code": "SKW30-20260115-DUNA-0002",
+            "description": {
+                "hu": "30kg rudak",
+                "en": "30kg rods"
+            },
+            "quantity": 7,
+            "temperature_c": 5.2,
+            "qcStatus": "hold",
+            "bufferId": "SKW30"
+        }
+    ],
+    "gates": [
+        {
+            "id": 1,
+            "name": {
+                "hu": "Átvétel",
+                "en": "Receipt"
+            },
+            "isActive": false,
+            "isCompleted": false
+        },
+        {
+            "id": 3,
+            "name": {
+                "hu": "Csontozás",
+                "en": "Deboning"
+            },
+            "isActive": false,
+            "isCompleted": false
+        },
+        {
+            "id": 4,
+            "name": {
+                "hu": "BULK Ready",
+                "en": "BULK Ready"
+            },
+            "isActive": false,
+            "isCompleted": false
+        },
+        {
+            "id": 5,
+            "name": {
+                "hu": "Keverés",
+                "en": "Mix"
+            },
+            "isActive": false,
+            "isCompleted": false
+        },
+        {
+            "id": 6,
+            "name": {
+                "hu": "Nyárs Mérés",
+                "en": "Skewer Weigh"
+            },
+            "isActive": false,
+            "isCompleted": false
+        },
+        {
+            "id": 7,
+            "name": {
+                "hu": "Fagyasztás",
+                "en": "Freeze"
+            },
+            "isActive": false,
+            "isCompleted": false
+        },
+        {
+            "id": 8,
+            "name": {
+                "hu": "Csomagolás",
+                "en": "Packaging"
+            },
+            "isActive": false,
+            "isCompleted": false
+        }
+    ]
+}
