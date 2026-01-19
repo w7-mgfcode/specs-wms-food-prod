@@ -280,7 +280,7 @@ faiss_index/
 *.sql.bz2
 *.dump
 *.pgdump
-data/
+/data/
 !data/.gitkeep
 *.csv
 !**/fixtures/*.csv
