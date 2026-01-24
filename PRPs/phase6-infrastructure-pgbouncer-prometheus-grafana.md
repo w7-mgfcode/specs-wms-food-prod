@@ -1,6 +1,6 @@
 # PRP: Infrastructure & Observability - PgBouncer + Prometheus + Grafana
 
-> **Phase:** 4.2a - Connection Pooling & Monitoring  
+> **Phase:** 6 - Connection Pooling & Monitoring  
 > **Priority:** HIGH (Required for production readiness)  
 > **Date:** January 19, 2026  
 > **Prerequisite:** INITIAL-6.md (Security Hardening), phase5-security-hardening-rbac-ratelimit.md  

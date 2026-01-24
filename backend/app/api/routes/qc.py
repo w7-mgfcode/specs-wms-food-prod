@@ -3,6 +3,7 @@
 from fastapi import APIRouter, Request, status
 
 from app.api.deps import CanMakeQCDecisions, DBSession
+from app.metrics import qc_decisions_total
 from app.models.qc import QCDecision
 from app.rate_limit import limiter
 from app.schemas.qc import QCDecisionCreate, QCDecisionResponse
@@ -54,5 +55,8 @@ async def create_qc_decision(
     db.add(decision)
     await db.flush()  # Get the generated ID
     await db.refresh(decision)  # Refresh to get all default values
+
+    # Increment Prometheus counter
+    qc_decisions_total.labels(decision=decision_data.decision.value).inc()
 
     return QCDecisionResponse.model_validate(decision)

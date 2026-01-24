@@ -10,7 +10,7 @@
 
 ## Purpose
 
-Implement security hardening, two-layer error handling architecture, env-driven CORS configuration, and type generation automation for the Phase 4 Frontend → FastAPI integration. This PRP focuses on the orthogonal concerns not covered in the main integration PRP.
+Implement security hardening, two-layer error handling architecture, env-driven CORS configuration, and type generation automation for the Phase 6 Frontend → FastAPI integration. This PRP focuses on the orthogonal concerns not covered in the main integration PRP.
 
 ## Core Principles
 

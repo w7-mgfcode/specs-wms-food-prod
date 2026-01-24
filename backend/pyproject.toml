@@ -29,6 +29,10 @@ dependencies = [
     # Rate limiting
     "slowapi>=0.1.9",
 
+    # Observability
+    "prometheus-fastapi-instrumentator>=6.1.0",
+    "prometheus-client>=0.20.0",
+
     # Utilities
     "httpx>=0.28.0",
     "python-multipart>=0.0.18",

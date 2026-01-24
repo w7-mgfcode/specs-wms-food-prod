@@ -1,0 +1,36 @@
+# FlowViz Backup Cron Configuration
+# /etc/cron.d/flowviz-backup
+# Install: sudo cp backend/docker/cron/flowviz-backup /etc/cron.d/
+
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+MAILTO=ops@flowviz.com
+
+# Environment variables (override with /etc/default/flowviz-backup)
+DB_NAME=flowviz
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=admin
+BACKUP_DIR=/backups
+S3_BUCKET=flowviz-backups
+GPG_RECIPIENT=backup@flowviz.com
+
+# === Daily Backup ===
+# Run at 2:00 AM UTC every day
+0 2 * * * root /opt/flowviz/backend/scripts/backup.sh daily >> /var/log/flowviz-backup.log 2>&1
+
+# === Weekly Backup ===
+# Run at 3:00 AM UTC every Sunday (for HACCP 7-year retention)
+0 3 * * 0 root /opt/flowviz/backend/scripts/backup-weekly.sh >> /var/log/flowviz-backup.log 2>&1
+
+# === Monthly Verification ===
+# Run at 4:00 AM UTC on the 1st of each month
+0 4 1 * * root /opt/flowviz/backend/scripts/verify-backup.sh >> /var/log/flowviz-backup-verify.log 2>&1
+
+# === Quarterly Restore Test ===
+# Run at 5:00 AM UTC on the 1st of Jan, Apr, Jul, Oct (HACCP compliance)
+0 5 1 1,4,7,10 * root /opt/flowviz/backend/scripts/test-restore.sh >> /var/log/flowviz-restore-test.log 2>&1
+
+# === Log Rotation ===
+# Rotate backup logs weekly
+0 0 * * 0 root /usr/sbin/logrotate /etc/logrotate.d/flowviz-backup

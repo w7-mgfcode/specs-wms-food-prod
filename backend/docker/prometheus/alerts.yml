@@ -1,0 +1,61 @@
+groups:
+  - name: flowviz_critical
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m])) 
+          / sum(rate(http_requests_total[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate detected (> 5%)"
+          description: "Error rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+
+      - alert: HighLatencyP99
+        expr: |
+          histogram_quantile(0.99, 
+            rate(http_request_duration_seconds_bucket[5m])
+          ) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High P99 latency (> 500ms)"
+
+      - alert: DatabaseDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL exporter is down"
+
+      - alert: APIDown
+        expr: up{job="fastapi"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "FastAPI application is down"
+
+  - name: flowviz_business
+    rules:
+      - alert: HighQCFailureRate
+        expr: |
+          sum(rate(flowviz_qc_decisions_total{decision="FAIL"}[1h]))
+          / sum(rate(flowviz_qc_decisions_total[1h])) > 0.1
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "QC failure rate exceeds 10% over last hour"
+
+      - alert: NoLotsRegistered
+        expr: |
+          increase(flowviz_lots_registered_total[1h]) == 0
+        for: 2h
+        labels:
+          severity: warning
+        annotations:
+          summary: "No lots registered in the last hour during business hours"

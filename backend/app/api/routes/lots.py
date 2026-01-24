@@ -4,6 +4,7 @@ from fastapi import APIRouter, Request, status
 from sqlalchemy import select
 
 from app.api.deps import AllAuthenticated, CanCreateLots, DBSession
+from app.metrics import lots_registered_total
 from app.models.lot import Lot
 from app.rate_limit import limiter
 from app.schemas.lot import LotCreate, LotResponse
@@ -66,5 +67,8 @@ async def create_lot(
     db.add(lot)
     await db.flush()  # Get the generated ID
     await db.refresh(lot)  # Refresh to get all default values
+
+    # Increment Prometheus counter
+    lots_registered_total.labels(lot_type=lot_data.lot_type).inc()
 
     return LotResponse.model_validate(lot)
