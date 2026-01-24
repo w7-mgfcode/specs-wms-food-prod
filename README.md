@@ -11,7 +11,21 @@
 
 ---
 
-## What's New (v0.5.0) 🎉
+## What's New (v0.6.0) 🎉
+
+- **Infrastructure Monitoring** — Full observability stack with Prometheus + Grafana
+- **Prometheus Metrics** — RED method (Rate/Errors/Duration) + 7 custom business metrics
+- **Grafana Dashboards** — 8-panel dashboard auto-provisioned with request rate, latency, QC decisions
+- **PgBouncer Integration** — Connection pooling with 1000+ concurrent connection support
+- **Alerting Rules** — 6 production alerts (HighErrorRate, HighLatencyP99, DatabaseDown, APIDown, HighQCFailureRate, NoLotsRegistered)
+- **Observability Docs** — 228-line observability.md + 352-line disaster-recovery.md
+- **Integration Tests** — `test-observability.sh` with 6 automated health checks
+- See [Phase 6 Summary](docs/phase/phase-6_infrastructure-status.md) for details
+
+### Previous Releases
+
+<details>
+<summary>v0.5.0 - Security Hardening</summary>
 
 - **Security Hardening** — Production-grade RBAC and rate limiting foundation
 - **Role-Based Access Control** — FastAPI dependency injection enforcing 5-tier permissions (ADMIN, MANAGER, AUDITOR, OPERATOR, VIEWER)
@@ -22,7 +36,7 @@
 - **100% Backward Compatible** — No frontend changes required
 - See [Phase 5 Summary](docs/phase/phase-5_security-hardening-rbac-ratelimit.md) for details
 
-### Previous Releases
+</details>
 
 <details>
 <summary>v0.4.0 - Frontend-FastAPI Integration</summary>
@@ -72,8 +86,11 @@
 - **Lot Traceability** — Full parent/child genealogy with weight and temperature tracking
 - **QC Gates** — Quality control checkpoints with PASS/HOLD/FAIL decisions and CCP support
 - **Temperature Monitoring** — Color-coded badges with ok/warning/critical thresholds
-- **Role-Based Access Control** — ADMIN, MANAGER, AUDITOR, OPERATOR, VIEWER roles with FastAPI RBAC enforcement (NEW in v0.5.0)
-- **Rate Limiting** — SlowAPI + Valkey preventing brute-force attacks and API abuse (NEW in v0.5.0)
+- **Prometheus Metrics** — RED method monitoring with 7 custom business metrics (NEW in v0.6.0)
+- **Grafana Dashboards** — 8-panel production dashboard with alerting (NEW in v0.6.0)
+- **PgBouncer Connection Pooling** — 1000+ concurrent connections with transaction pooling (NEW in v0.6.0)
+- **Role-Based Access Control** — ADMIN, MANAGER, AUDITOR, OPERATOR, VIEWER roles with FastAPI RBAC enforcement
+- **Rate Limiting** — SlowAPI + Valkey preventing brute-force attacks and API abuse
 - **Multi-Language Support** — Hungarian (hu) and English (en)
 - **Production Run Management** — Start/stop runs, auto-registration, summaries
 
@@ -94,7 +111,7 @@
 # Navigate to backend
 cd specs-wms-food-prod/backend
 
-# Start Docker services (PostgreSQL 17 + Valkey)
+# Start Docker services (PostgreSQL 17 + Valkey + Observability Stack)
 docker-compose -f docker/docker-compose.yml up -d
 
 # Install Python dependencies with UV
@@ -105,6 +122,18 @@ uv run uvicorn app.main:app --reload --port 8000
 
 # Verify backend is running
 curl http://localhost:8000/api/health
+```
+
+### Observability Stack (NEW in v0.6.0)
+
+```bash
+# Verify observability services
+cd backend/docker && ./test-observability.sh
+
+# Access dashboards
+# Grafana:    http://localhost:3001 (admin/admin)
+# Prometheus: http://localhost:9090
+# Metrics:    http://localhost:8000/metrics
 ```
 
 ### Frontend Development
@@ -193,32 +222,51 @@ See [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) for complete documentation.
                           │  /api → :8000       │
                           └──────────┬──────────┘
                                      │
-                          ┌──────────▼──────────┐
-                          │    FastAPI          │
-                          │    Port 8000        │
-                          │  - CORS (env)       │
-                          │  - JWT Auth         │
-                          │  - Pydantic         │
-                          └──────────┬──────────┘
-                                     │
-                          ┌──────────▼──────────┐
-                          │  PostgreSQL 17      │
-                          │  + Valkey 8.1       │
-                          └─────────────────────┘
+┌────────────────────────────────────┼──────────────────────────────────┐
+│              Observability Stack (Phase 6)                             │
+│                                    │                                    │
+│   ┌────────────┐          ┌────────▼────────┐          ┌────────────┐ │
+│   │  Grafana   │◀─────────│   Prometheus    │─────────▶│   Alerts   │ │
+│   │   :3001    │          │     :9090       │          │            │ │
+│   └────────────┘          └────────┬────────┘          └────────────┘ │
+│                                    │ scrape                            │
+│         ┌──────────────────────────┼──────────────────────────┐       │
+│         │                          │                          │       │
+│         ▼                          ▼                          ▼       │
+│   ┌──────────┐            ┌──────────────┐            ┌────────────┐ │
+│   │ node-exp │            │   FastAPI    │            │postgres-exp│ │
+│   │  :9100   │            │/metrics :8000│            │   :9187    │ │
+│   └──────────┘            └──────┬───────┘            └────────────┘ │
+└──────────────────────────────────┼────────────────────────────────────┘
+                                   │
+                          ┌────────▼────────┐
+                          │   PgBouncer     │ ◀── Connection Pooling
+                          │     :6432       │     (1000+ connections)
+                          └────────┬────────┘
+                                   │
+                          ┌────────▼────────┐
+                          │  PostgreSQL 17  │
+                          │  + Valkey 8.1   │
+                          └─────────────────┘
 ```
+
+**Key Changes in Phase 6**:
+- ✅ **Prometheus Metrics**: RED method + 7 custom business metrics (`flowviz_lots_registered_total`, `flowviz_qc_decisions_total`, etc.)
+- ✅ **Grafana Dashboard**: 8-panel auto-provisioned dashboard with alerting
+- ✅ **PgBouncer**: Connection pooling (pool_size=25, max_connections=1000)
+- ✅ **Alert Rules**: 6 production alerts (HighErrorRate, HighLatencyP99, DatabaseDown, APIDown)
+- ✅ **Documentation**: observability.md (228 lines) + disaster-recovery.md (352 lines)
 
 **Key Changes in Phase 5**:
 - ✅ **RBAC**: FastAPI dependency injection with 5-tier role permissions
 - ✅ **Rate Limiting**: SlowAPI + Valkey (10/min login, 100-200/min endpoints)
 - ✅ **Enhanced JWT**: Role claims for efficient authorization
 - ✅ **Test Coverage**: 618 lines of security tests (RBAC + rate limiting)
-- ✅ **ADR-0003**: Architecture Decision Record for RBAC design
 
 **Key Changes in Phase 4**:
 - ✅ **State Separation**: Zustand (UI) + TanStack Query (Server)
 - ✅ **API Client**: Hybrid pattern with JWT in memory (XSS protection)
 - ✅ **Vite Proxy**: Frontend proxies `/api` to FastAPI port 8000
-- ✅ **Security**: Environment-driven CORS, no localStorage tokens
 - ❌ **Deprecated**: Node/Express (port 3000), Supabase BaaS
 
 See [docs/architecture.md](docs/architecture.md) for detailed documentation.
@@ -273,26 +321,37 @@ specs-wms-food-prod/
 ├── backend/                  # FastAPI backend
 │   ├── app/
 │   │   ├── api/
-│   │   │   ├── routes/       # API endpoints (RBAC protected - Phase 5)
-│   │   │   └── deps.py       # RBAC dependencies (Phase 5) - UPDATED
+│   │   │   ├── routes/       # API endpoints (RBAC protected, metrics instrumented)
+│   │   │   └── deps.py       # RBAC dependencies
 │   │   ├── models/           # SQLAlchemy models
 │   │   ├── schemas/          # Pydantic schemas
 │   │   ├── services/         # Business logic
 │   │   ├── config.py         # Settings (CORS env-driven)
-│   │   ├── rate_limit.py     # SlowAPI limiter (Phase 5) - NEW
+│   │   ├── metrics.py        # Prometheus custom metrics (Phase 6) - NEW
+│   │   ├── rate_limit.py     # SlowAPI limiter
 │   │   └── tasks/            # Celery tasks
 │   ├── alembic/              # Database migrations
-│   ├── docker/               # Docker Compose
+│   ├── docker/               # Docker Compose + Observability
+│   │   ├── docker-compose.yml  # 9 services including observability stack
+│   │   ├── prometheus/       # Prometheus config (Phase 6) - NEW
+│   │   │   ├── prometheus.yml
+│   │   │   └── alerts.yml
+│   │   ├── grafana/          # Grafana provisioning (Phase 6) - NEW
+│   │   │   ├── provisioning/
+│   │   │   └── dashboards/
+│   │   └── test-observability.sh  # Integration test script - NEW
 │   └── tests/                # Tests
-│       ├── test_rbac.py      # RBAC test suite (Phase 5) - NEW
-│       ├── test_rate_limiting.py  # Rate limit tests (Phase 5) - NEW
+│       ├── test_rbac.py      # RBAC test suite
+│       ├── test_rate_limiting.py  # Rate limit tests
 │       └── characterization/ # API parity tests
 ├── PRPs/                     # Pydantic AI agent templates
-│   ├── phase5-security-hardening-rbac-ratelimit.md  # Phase 5 PRP - NEW
+│   ├── phase6-infrastructure-pgbouncer-prometheus-grafana.md  # Phase 6 PRP - NEW
+│   ├── phase5-security-hardening-rbac-ratelimit.md
 │   ├── phase4-frontend-fastapi-integration.md
 │   └── phase4-security-error-handling.md
 ├── docs/
-│   ├── architecture.md       # System architecture (Phase 5 updated)
+│   ├── architecture.md       # System architecture (Phase 6 updated)
+│   ├── observability.md      # Observability guide (Phase 6) - NEW
 │   ├── SETUP.md              # Setup guide
 │   ├── ENVIRONMENT.md        # Environment variables
 │   ├── RUNBOOK.md            # Error scenarios
@@ -301,9 +360,12 @@ specs-wms-food-prod/
 │   │   ├── phase-2_api-backend.md
 │   │   ├── phase-3_first-flow.md
 │   │   ├── phase-4_frontend-fastapi-integration.md
-│   │   └── phase-5_security-hardening-rbac-ratelimit.md  # Phase 5 - NEW
+│   │   ├── phase-5_security-hardening-rbac-ratelimit.md
+│   │   └── phase-6_infrastructure-status.md  # Phase 6 - NEW
+│   ├── runbooks/             # Operational runbooks (Phase 6) - NEW
+│   │   └── disaster-recovery.md
 │   └── decisions/            # ADRs
-│       └── 0003-rbac-enforcement.md  # Phase 5 - NEW
+│       └── 0003-rbac-enforcement.md
 └── .github/                  # CI/CD workflows
 ```
 
