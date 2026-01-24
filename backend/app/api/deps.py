@@ -165,3 +165,11 @@ CanEditFlows = Annotated[
 ]
 # Only Managers can publish flows: ADMIN, MANAGER
 CanPublishFlows = Annotated[User, Depends(require_roles(UserRole.ADMIN, UserRole.MANAGER))]
+
+# Production Run RBAC type aliases
+# Can create and operate runs: ADMIN, MANAGER, OPERATOR
+CanCreateRuns = Annotated[
+    User, Depends(require_roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.OPERATOR))
+]
+# Can manage runs (hold/resume/abort): ADMIN, MANAGER
+CanManageRuns = Annotated[User, Depends(require_roles(UserRole.ADMIN, UserRole.MANAGER))]
