@@ -11,7 +11,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base, UUID_TYPE
+from app.database import UUID_TYPE, Base
 
 if TYPE_CHECKING:
     from app.models.production import ProductionRun

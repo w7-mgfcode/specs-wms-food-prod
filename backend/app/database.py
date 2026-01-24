@@ -3,8 +3,8 @@
 PgBouncer-optimized configuration with transaction pooling mode.
 """
 
-from sqlalchemy import JSON, Uuid
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import JSON, String, Uuid
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -38,9 +38,11 @@ class Base(DeclarativeBase):
     pass
 
 
-# JSONB variant for SQLite-based tests
+# Type aliases with SQLite variants for testing
 JSONB_TYPE = JSONB().with_variant(JSON(), "sqlite")
 UUID_TYPE = Uuid(as_uuid=True)
+# ARRAY type with JSON fallback for SQLite (stores as JSON array)
+ARRAY_STRING_TYPE = ARRAY(String(10)).with_variant(JSON(), "sqlite")
 
 
 async def init_db() -> None:

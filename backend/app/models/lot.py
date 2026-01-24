@@ -1,7 +1,7 @@
 """Lot and genealogy models."""
 
 import enum
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Optional
 from uuid import UUID, uuid4
@@ -9,9 +9,10 @@ from uuid import UUID, uuid4
 from sqlalchemy import DateTime, Enum, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base, JSONB_TYPE, UUID_TYPE
+from app.database import JSONB_TYPE, UUID_TYPE, Base
 
 if TYPE_CHECKING:
+    from app.models.inventory import InventoryItem, StockMove
     from app.models.production import Phase, ProductionRun
     from app.models.qc import QCDecision
     from app.models.user import User
@@ -63,37 +64,37 @@ class Lot(Base):
 
     id: Mapped[UUID] = mapped_column(UUID_TYPE, primary_key=True, default=uuid4)
     lot_code: Mapped[str] = mapped_column(String, unique=True, nullable=False)
-    lot_type: Mapped[Optional[LotType]] = mapped_column(
+    lot_type: Mapped[LotType | None] = mapped_column(
         Enum(LotType, name="lot_type", create_constraint=False), nullable=True
     )
 
     # Phase 8.1: Step index for canonical 11-step tracking (0-10)
-    step_index: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    step_index: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Phase 8.1: Lot lifecycle status
     status: Mapped[str] = mapped_column(
         String(20), default=LotStatus.CREATED.value
     )
 
-    production_run_id: Mapped[Optional[UUID]] = mapped_column(
+    production_run_id: Mapped[UUID | None] = mapped_column(
         UUID_TYPE,
         ForeignKey("production_runs.id"),
         nullable=True,
     )
-    phase_id: Mapped[Optional[UUID]] = mapped_column(
+    phase_id: Mapped[UUID | None] = mapped_column(
         UUID_TYPE,
         ForeignKey("phases.id"),
         nullable=True,
     )
-    operator_id: Mapped[Optional[UUID]] = mapped_column(
+    operator_id: Mapped[UUID | None] = mapped_column(
         UUID_TYPE,
         ForeignKey("users.id"),
         nullable=True,
     )
-    weight_kg: Mapped[Optional[Decimal]] = mapped_column(
+    weight_kg: Mapped[Decimal | None] = mapped_column(
         Numeric(10, 2), nullable=True
     )
-    temperature_c: Mapped[Optional[Decimal]] = mapped_column(
+    temperature_c: Mapped[Decimal | None] = mapped_column(
         Numeric(5, 1), nullable=True
     )
     metadata_: Mapped[dict[str, Any]] = mapped_column(
@@ -102,7 +103,7 @@ class Lot(Base):
         default=dict,
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
 
     # Relationships
@@ -127,6 +128,14 @@ class Lot(Base):
         back_populates="parent",
     )
 
+    # Phase 8.3: Inventory relationships
+    inventory_items: Mapped[list["InventoryItem"]] = relationship(
+        "InventoryItem", back_populates="lot"
+    )
+    stock_moves: Mapped[list["StockMove"]] = relationship(
+        "StockMove", back_populates="lot"
+    )
+
 
 class LotGenealogy(Base):
     """
@@ -138,21 +147,21 @@ class LotGenealogy(Base):
     __tablename__ = "lot_genealogy"
 
     id: Mapped[UUID] = mapped_column(UUID_TYPE, primary_key=True, default=uuid4)
-    parent_lot_id: Mapped[Optional[UUID]] = mapped_column(
+    parent_lot_id: Mapped[UUID | None] = mapped_column(
         UUID_TYPE,
         ForeignKey("lots.id"),
         nullable=True,
     )
-    child_lot_id: Mapped[Optional[UUID]] = mapped_column(
+    child_lot_id: Mapped[UUID | None] = mapped_column(
         UUID_TYPE,
         ForeignKey("lots.id"),
         nullable=True,
     )
-    quantity_used_kg: Mapped[Optional[Decimal]] = mapped_column(
+    quantity_used_kg: Mapped[Decimal | None] = mapped_column(
         Numeric(10, 2), nullable=True
     )
     linked_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
 
     # Relationships

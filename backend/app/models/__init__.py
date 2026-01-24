@@ -1,6 +1,7 @@
 """SQLAlchemy ORM models."""
 
 from app.models.flow import FlowDefinition, FlowVersion, FlowVersionStatus
+from app.models.inventory import Buffer, InventoryItem, StockMove
 from app.models.lot import Lot, LotGenealogy, LotStatus, LotType
 from app.models.production import Phase, ProductionRun, RunStatus, Scenario, Stream
 from app.models.qc import Decision, GateType, QCDecision, QCGate
@@ -35,4 +36,8 @@ __all__ = [
     # Run models (Phase 8.1)
     "RunStepExecution",
     "StepExecutionStatus",
+    # Inventory models (Phase 8.3)
+    "Buffer",
+    "InventoryItem",
+    "StockMove",
 ]

@@ -12,6 +12,21 @@ from app.schemas.flow import (
     GraphSchema,
     PublishFlowResponse,
 )
+from app.schemas.inventory import (
+    BufferCreate,
+    BufferListItem,
+    BufferResponse,
+    BufferSummary,
+    BufferUpdate,
+    ConsumeRequest,
+    InventoryItemCreate,
+    InventoryItemResponse,
+    ReceiveRequest,
+    RunBufferSummary,
+    StockMoveCreate,
+    StockMoveResponse,
+    TransferRequest,
+)
 from app.schemas.lot import LotCreate, LotResponse
 from app.schemas.qc import QCDecisionCreate, QCDecisionResponse
 from app.schemas.traceability import TraceabilityResponse
@@ -41,4 +56,18 @@ __all__ = [
     "FlowNodeType",
     "GraphSchema",
     "PublishFlowResponse",
+    # Inventory schemas (Phase 8.3)
+    "BufferCreate",
+    "BufferListItem",
+    "BufferResponse",
+    "BufferSummary",
+    "BufferUpdate",
+    "ConsumeRequest",
+    "InventoryItemCreate",
+    "InventoryItemResponse",
+    "ReceiveRequest",
+    "RunBufferSummary",
+    "StockMoveCreate",
+    "StockMoveResponse",
+    "TransferRequest",
 ]

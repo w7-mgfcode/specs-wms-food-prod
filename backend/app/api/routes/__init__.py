@@ -2,7 +2,17 @@
 
 from fastapi import APIRouter
 
-from app.api.routes import auth, flows, health, lots, qc, runs, traceability
+from app.api.routes import (
+    auth,
+    buffers,
+    flows,
+    health,
+    inventory,
+    lots,
+    qc,
+    runs,
+    traceability,
+)
 
 api_router = APIRouter()
 
@@ -14,3 +24,5 @@ api_router.include_router(qc.router)
 api_router.include_router(traceability.router)
 api_router.include_router(flows.router)
 api_router.include_router(runs.router)
+api_router.include_router(buffers.router)
+api_router.include_router(inventory.router)

@@ -1,19 +1,19 @@
 """User models matching the database schema."""
 
-import os
-
 import enum
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional
+import os
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from sqlalchemy import DateTime, Enum, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base, UUID_TYPE
+from app.database import UUID_TYPE, Base
 
 if TYPE_CHECKING:
     from app.models.flow import FlowDefinition, FlowVersion
+    from app.models.inventory import StockMove
     from app.models.lot import Lot
     from app.models.production import ProductionRun
     from app.models.qc import QCDecision
@@ -45,10 +45,10 @@ class AuthUser(Base):
     __table_args__ = {} if IS_SQLITE_TEST else {"schema": "auth"}
 
     id: Mapped[UUID] = mapped_column(UUID_TYPE, primary_key=True, default=uuid4)
-    email: Mapped[Optional[str]] = mapped_column(Text, unique=True, nullable=True)
-    encrypted_password: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    email: Mapped[str | None] = mapped_column(Text, unique=True, nullable=True)
+    encrypted_password: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
 
 
@@ -67,15 +67,15 @@ class User(Base):
         primary_key=True,
     )
     email: Mapped[str] = mapped_column(String, nullable=False)
-    full_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    full_name: Mapped[str | None] = mapped_column(String, nullable=True)
     role: Mapped[UserRole] = mapped_column(
         Enum(UserRole, name="user_role", create_constraint=False),
         default=UserRole.VIEWER,
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
-    last_login: Mapped[Optional[datetime]] = mapped_column(
+    last_login: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 
@@ -112,4 +112,9 @@ class User(Base):
     # Phase 8.1: Step executions operated by this user
     step_executions: Mapped[list["RunStepExecution"]] = relationship(
         "RunStepExecution", back_populates="operator"
+    )
+
+    # Phase 8.3: Stock moves performed by this user
+    stock_moves: Mapped[list["StockMove"]] = relationship(
+        "StockMove", back_populates="operator"
     )

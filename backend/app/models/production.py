@@ -1,7 +1,7 @@
 """Production-related models: Scenario, Stream, Phase, ProductionRun."""
 
 import enum
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Optional
 from uuid import UUID, uuid4
@@ -9,10 +9,11 @@ from uuid import UUID, uuid4
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base, JSONB_TYPE, UUID_TYPE
+from app.database import JSONB_TYPE, UUID_TYPE, Base
 
 if TYPE_CHECKING:
     from app.models.flow import FlowVersion
+    from app.models.inventory import InventoryItem
     from app.models.lot import Lot
     from app.models.qc import QCGate
     from app.models.run import RunStepExecution
@@ -52,7 +53,7 @@ class Scenario(Base):
     i18n: Mapped[dict[str, Any]] = mapped_column(JSONB_TYPE, default=dict)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
 
     # Relationships
@@ -80,7 +81,7 @@ class Stream(Base):
     __tablename__ = "streams"
 
     id: Mapped[UUID] = mapped_column(UUID_TYPE, primary_key=True, default=uuid4)
-    scenario_id: Mapped[Optional[UUID]] = mapped_column(
+    scenario_id: Mapped[UUID | None] = mapped_column(
         UUID_TYPE,
         ForeignKey("scenarios.id", ondelete="CASCADE"),
         nullable=True,
@@ -107,17 +108,17 @@ class Phase(Base):
     __tablename__ = "phases"
 
     id: Mapped[UUID] = mapped_column(UUID_TYPE, primary_key=True, default=uuid4)
-    scenario_id: Mapped[Optional[UUID]] = mapped_column(
+    scenario_id: Mapped[UUID | None] = mapped_column(
         UUID_TYPE,
         ForeignKey("scenarios.id", ondelete="CASCADE"),
         nullable=True,
     )
-    stream_id: Mapped[Optional[UUID]] = mapped_column(
+    stream_id: Mapped[UUID | None] = mapped_column(
         UUID_TYPE,
         ForeignKey("streams.id"),
         nullable=True,
     )
-    qc_gate_id: Mapped[Optional[UUID]] = mapped_column(
+    qc_gate_id: Mapped[UUID | None] = mapped_column(
         UUID_TYPE,
         ForeignKey("qc_gates.id"),
         nullable=True,
@@ -156,12 +157,12 @@ class ProductionRun(Base):
         nullable=True,
     )
 
-    scenario_id: Mapped[Optional[UUID]] = mapped_column(
+    scenario_id: Mapped[UUID | None] = mapped_column(
         UUID_TYPE,
         ForeignKey("scenarios.id"),
         nullable=True,
     )
-    operator_id: Mapped[Optional[UUID]] = mapped_column(
+    operator_id: Mapped[UUID | None] = mapped_column(
         UUID_TYPE,
         ForeignKey("users.id"),
         nullable=True,
@@ -182,24 +183,24 @@ class ProductionRun(Base):
     # Phase 8.1: Current step index (0-10)
     current_step_index: Mapped[int] = mapped_column(Integer, default=0)
 
-    daily_target_kg: Mapped[Optional[Decimal]] = mapped_column(Numeric, nullable=True)
+    daily_target_kg: Mapped[Decimal | None] = mapped_column(Numeric, nullable=True)
     started_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
 
     # Phase 8.1: Completed timestamp (distinct from ended_at)
-    completed_at: Mapped[Optional[datetime]] = mapped_column(
+    completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 
-    ended_at: Mapped[Optional[datetime]] = mapped_column(
+    ended_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 
     # Phase 8.1: Idempotency key for duplicate prevention
     idempotency_key: Mapped[UUID | None] = mapped_column(UUID_TYPE, unique=True, nullable=True)
 
-    summary: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB_TYPE, nullable=True)
+    summary: Mapped[dict[str, Any] | None] = mapped_column(JSONB_TYPE, nullable=True)
 
     # Relationships
     flow_version: Mapped[Optional["FlowVersion"]] = relationship(
@@ -219,4 +220,9 @@ class ProductionRun(Base):
     # Phase 8.1: Step executions
     step_executions: Mapped[list["RunStepExecution"]] = relationship(
         "RunStepExecution", back_populates="production_run", cascade="all, delete-orphan"
+    )
+
+    # Phase 8.3: Inventory items in this run
+    inventory_items: Mapped[list["InventoryItem"]] = relationship(
+        "InventoryItem", back_populates="production_run"
     )

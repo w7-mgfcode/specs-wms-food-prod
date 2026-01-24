@@ -5,13 +5,15 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app.api.deps import AllAuthenticated, CanCreateRuns, CanManageRuns, DBSession
 from app.models.flow import FlowVersion, FlowVersionStatus
+from app.models.inventory import Buffer, InventoryItem
 from app.models.production import ProductionRun, RunStatus
 from app.models.run import RunStepExecution, StepExecutionStatus
 from app.rate_limit import limiter
+from app.schemas.inventory import RunBufferSummary
 from app.schemas.run import (
     AbortRunRequest,
     AdvanceStepRequest,
@@ -498,3 +500,59 @@ async def abort_run(
     await db.refresh(run)
 
     return ProductionRunResponse.model_validate(run)
+
+
+# --- Inventory Endpoints ---
+
+
+@router.get("/{run_id}/buffers", response_model=list[RunBufferSummary])
+@limiter.limit("60/minute")
+async def get_run_buffers(
+    request: Request,
+    run_id: UUID,
+    db: DBSession,
+    current_user: AllAuthenticated,
+) -> list[RunBufferSummary]:
+    """
+    Get buffer summaries for a production run.
+
+    Returns all buffers that have inventory from this run.
+
+    Requires: Any authenticated user.
+    Rate limit: 60/minute.
+    """
+    # Verify run exists
+    run_stmt = select(ProductionRun.id).where(ProductionRun.id == run_id)
+    run_result = await db.execute(run_stmt)
+    if run_result.scalar_one_or_none() is None:
+        raise HTTPException(status_code=404, detail="Production run not found")
+
+    # Get inventory grouped by buffer for this run
+    stmt = (
+        select(
+            Buffer.id,
+            Buffer.buffer_code,
+            Buffer.buffer_type,
+            func.count(InventoryItem.id).label("lot_count"),
+            func.coalesce(func.sum(InventoryItem.quantity_kg), 0).label("total_kg"),
+        )
+        .join(InventoryItem, Buffer.id == InventoryItem.buffer_id)
+        .where(InventoryItem.run_id == run_id)
+        .where(InventoryItem.exited_at.is_(None))
+        .group_by(Buffer.id, Buffer.buffer_code, Buffer.buffer_type)
+        .order_by(Buffer.buffer_code)
+    )
+
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    return [
+        RunBufferSummary(
+            buffer_id=row.id,
+            buffer_code=row.buffer_code,
+            buffer_type=row.buffer_type,
+            lot_count=row.lot_count,
+            total_quantity_kg=row.total_kg,
+        )
+        for row in rows
+    ]
