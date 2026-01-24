@@ -23,7 +23,7 @@ services:
       - flowviz_net
 
   pgbouncer:
-    image: edoburu/pgbouncer:1.21-p0
+    image: edoburu/pgbouncer:latest
     container_name: flowviz_pgbouncer
     environment:
       - DATABASE_URL=postgres://admin:password@postgres:5432/flowviz

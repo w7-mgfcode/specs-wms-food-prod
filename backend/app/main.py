@@ -42,7 +42,7 @@ def create_app() -> FastAPI:
     Instrumentator(
         should_group_status_codes=True,
         should_ignore_untemplated=True,
-        should_respect_env_var=True,
+        should_respect_env_var=False,
         should_instrument_requests_inprogress=True,
         excluded_handlers=["/metrics", "/health", "/docs", "/redoc", "/openapi.json"],
         inprogress_name="flowviz_http_requests_inprogress",
