@@ -210,7 +210,8 @@ function FlowCanvasComponent({ onDragOver, onDrop }: FlowCanvasProps) {
     const isReadOnly = currentVersion?.status !== 'DRAFT';
 
     return (
-        <div className="flex-1 h-full">
+        <div className="flex-1 relative" style={{ minHeight: '500px' }}>
+            <div className="absolute inset-0">
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -265,6 +266,7 @@ function FlowCanvasComponent({ onDragOver, onDrop }: FlowCanvasProps) {
                     maskColor="rgba(0, 0, 0, 0.5)"
                 />
             </ReactFlow>
+            </div>
         </div>
     );
 }
