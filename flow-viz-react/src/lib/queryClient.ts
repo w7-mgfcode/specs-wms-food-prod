@@ -95,4 +95,11 @@ export const queryKeys = {
     all: ['traceability'] as const,
     lot: (lotCode: string) => [...queryKeys.traceability.all, lotCode] as const,
   },
+  flows: {
+    all: ['flows'] as const,
+    lists: () => [...queryKeys.flows.all, 'list'] as const,
+    detail: (id: string) => [...queryKeys.flows.all, 'detail', id] as const,
+    version: (flowId: string, versionNum: number) =>
+      [...queryKeys.flows.all, 'version', flowId, versionNum] as const,
+  },
 } as const;

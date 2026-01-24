@@ -157,3 +157,11 @@ AllAuthenticated = Annotated[
         )
     ),
 ]
+
+# Flow Editor RBAC type aliases
+# Editors can create/update drafts: ADMIN, MANAGER, OPERATOR
+CanEditFlows = Annotated[
+    User, Depends(require_roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.OPERATOR))
+]
+# Only Managers can publish flows: ADMIN, MANAGER
+CanPublishFlows = Annotated[User, Depends(require_roles(UserRole.ADMIN, UserRole.MANAGER))]

@@ -10,6 +10,7 @@ const allNavItems = [
     { path: '/dashboard', icon: '📺', label: 'Live Dashboard', badge: 'V1', roles: ['VIEWER', 'OPERATOR', 'MANAGER', 'AUDITOR', 'ADMIN'] },
     { path: '/command', icon: '🏭', label: 'Command Center', badge: 'V2', roles: ['OPERATOR', 'MANAGER', 'ADMIN'] },
     { path: '/validator', icon: '🔍', label: 'Quality Validator', badge: 'V3', roles: ['AUDITOR', 'MANAGER', 'ADMIN'] },
+    { path: '/flow-editor', icon: '✏️', label: 'Flow Editor', badge: 'NEW', roles: ['OPERATOR', 'MANAGER', 'ADMIN'] },
     { path: '/first-flow', icon: '🌊', label: 'First Flow', badge: 'V4', roles: ['VIEWER', 'OPERATOR', 'MANAGER', 'AUDITOR', 'ADMIN'] },
     { path: '/presentation', icon: '📋', label: 'Presentation', badge: 'DOCS', roles: ['VIEWER', 'OPERATOR', 'MANAGER', 'AUDITOR', 'ADMIN'] },
 ];

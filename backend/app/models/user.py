@@ -13,6 +13,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base, UUID_TYPE
 
 if TYPE_CHECKING:
+    from app.models.flow import FlowDefinition, FlowVersion
     from app.models.lot import Lot
     from app.models.production import ProductionRun
     from app.models.qc import QCDecision
@@ -84,4 +85,13 @@ class User(Base):
     lots: Mapped[list["Lot"]] = relationship("Lot", back_populates="operator")
     qc_decisions: Mapped[list["QCDecision"]] = relationship(
         "QCDecision", back_populates="operator"
+    )
+    flow_definitions: Mapped[list["FlowDefinition"]] = relationship(
+        "FlowDefinition", back_populates="creator"
+    )
+    flow_versions_created: Mapped[list["FlowVersion"]] = relationship(
+        "FlowVersion", foreign_keys="FlowVersion.created_by", back_populates="creator"
+    )
+    flow_versions_published: Mapped[list["FlowVersion"]] = relationship(
+        "FlowVersion", foreign_keys="FlowVersion.published_by", back_populates="publisher"
     )
