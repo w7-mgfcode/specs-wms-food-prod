@@ -7,6 +7,7 @@ import { Presentation } from './pages/Presentation';
 import { Login } from './pages/Login';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { FirstFlowPage } from './components/flow/FirstFlowPage';
+import { FlowCatalogPage, FlowEditorPage } from './components/flowEditor';
 
 export const router = createHashRouter([
     {
@@ -65,6 +66,25 @@ export const router = createHashRouter([
                     {
                         path: '/first-flow',
                         element: <FirstFlowPage />,
+                    },
+                    // Flow Editor - requires ADMIN, MANAGER, or OPERATOR
+                    {
+                        path: '/flow-editor',
+                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'OPERATOR']} />,
+                        children: [
+                            {
+                                index: true,
+                                element: <FlowCatalogPage />,
+                            },
+                            {
+                                path: ':flowId',
+                                element: <FlowEditorPage />,
+                            },
+                            {
+                                path: ':flowId/v/:versionNum',
+                                element: <FlowEditorPage />,
+                            },
+                        ],
                     },
                 ],
             },
