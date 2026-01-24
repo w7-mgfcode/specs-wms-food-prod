@@ -6,23 +6,31 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Optional
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base, JSONB_TYPE, UUID_TYPE
 
 if TYPE_CHECKING:
+    from app.models.flow import FlowVersion
     from app.models.lot import Lot
     from app.models.qc import QCGate
+    from app.models.run import RunStepExecution
     from app.models.user import User
 
 
 class RunStatus(str, enum.Enum):
-    """Production run status matching database CHECK constraint."""
+    """Production run status per INITIAL-11.
 
-    ACTIVE = "ACTIVE"
-    COMPLETED = "COMPLETED"
-    CANCELLED = "CANCELLED"
+    Phase 8.1: Updated lifecycle states.
+    """
+
+    IDLE = "IDLE"          # Created but not started
+    RUNNING = "RUNNING"    # Active execution (was ACTIVE)
+    HOLD = "HOLD"          # Paused due to issue
+    COMPLETED = "COMPLETED"  # Successfully finished
+    ABORTED = "ABORTED"    # Terminated early (was CANCELLED)
+    ARCHIVED = "ARCHIVED"  # Historical record
 
 
 class Scenario(Base):
@@ -132,12 +140,22 @@ class ProductionRun(Base):
     Active production run.
 
     Maps to public.production_runs table.
+
+    Phase 8.1: Enhanced with flow version pinning and step tracking.
     """
 
     __tablename__ = "production_runs"
 
     id: Mapped[UUID] = mapped_column(UUID_TYPE, primary_key=True, default=uuid4)
     run_code: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
+
+    # Phase 8.1: Flow version pinning (immutable after creation)
+    flow_version_id: Mapped[UUID | None] = mapped_column(
+        UUID_TYPE,
+        ForeignKey("flow_versions.id"),
+        nullable=True,
+    )
+
     scenario_id: Mapped[Optional[UUID]] = mapped_column(
         UUID_TYPE,
         ForeignKey("scenarios.id"),
@@ -148,24 +166,57 @@ class ProductionRun(Base):
         ForeignKey("users.id"),
         nullable=True,
     )
-    status: Mapped[RunStatus] = mapped_column(
-        Enum(RunStatus, name="run_status", create_constraint=False),
-        default=RunStatus.ACTIVE,
+
+    # Phase 8.1: Started by user (separate from operator for audit)
+    started_by: Mapped[UUID | None] = mapped_column(
+        UUID_TYPE,
+        ForeignKey("users.id"),
+        nullable=True,
     )
+
+    status: Mapped[str] = mapped_column(
+        String(20),
+        default=RunStatus.IDLE.value,
+    )
+
+    # Phase 8.1: Current step index (0-10)
+    current_step_index: Mapped[int] = mapped_column(Integer, default=0)
+
     daily_target_kg: Mapped[Optional[Decimal]] = mapped_column(Numeric, nullable=True)
     started_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
+
+    # Phase 8.1: Completed timestamp (distinct from ended_at)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     ended_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+
+    # Phase 8.1: Idempotency key for duplicate prevention
+    idempotency_key: Mapped[UUID | None] = mapped_column(UUID_TYPE, unique=True, nullable=True)
+
     summary: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB_TYPE, nullable=True)
 
     # Relationships
+    flow_version: Mapped[Optional["FlowVersion"]] = relationship(
+        "FlowVersion", back_populates="production_runs"
+    )
     scenario: Mapped[Optional["Scenario"]] = relationship(
         "Scenario", back_populates="production_runs"
     )
     operator: Mapped[Optional["User"]] = relationship(
-        "User", back_populates="production_runs"
+        "User", foreign_keys=[operator_id], back_populates="production_runs"
+    )
+    starter: Mapped[Optional["User"]] = relationship(
+        "User", foreign_keys=[started_by], back_populates="production_runs_started"
     )
     lots: Mapped[list["Lot"]] = relationship("Lot", back_populates="production_run")
+
+    # Phase 8.1: Step executions
+    step_executions: Mapped[list["RunStepExecution"]] = relationship(
+        "RunStepExecution", back_populates="production_run", cascade="all, delete-orphan"
+    )

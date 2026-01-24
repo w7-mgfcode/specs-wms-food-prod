@@ -11,6 +11,22 @@
 
 ---
 
+## What's New (v0.7.0 - Phase 8.1) — Schema Alignment 🔄
+
+**In Progress**: Production flow execution tracking with step-based management
+
+- **Step Index Tracking** — Canonical 11-step production flow (0-10) on lots and production runs
+- **Lot Status Lifecycle** — 7-state status enum (CREATED, QUARANTINE, RELEASED, HOLD, REJECTED, CONSUMED, FINISHED)
+- **RunStepExecution Model** — Granular tracking of execution status per step with operator audit trail
+- **Extended LotType Enum** — SKU-specific variants (SKW15, SKW30, FRZ15, FRZ30, FG15, FG30) + PAL, SHIP
+- **Flow Version Governance** — REVIEW status for approval workflow + immutability trigger on PUBLISHED versions
+- **Enhanced RunStatus** — New states (IDLE, RUNNING, HOLD, COMPLETED, ABORTED, ARCHIVED) with automatic migration
+- **Production Run Audit Trail** — started_by user, idempotency_key for duplicate prevention, completed_at timestamp
+- **5 Database Migrations** — Comprehensive schema validation with backward-compatible downgrades
+- See [Phase 8.1 Summary](docs/phase/phase-8_schema-alignment.md) for details
+
+---
+
 ## What's New (v0.6.0) 🎉
 
 - **Infrastructure Monitoring** — Full observability stack with Prometheus + Grafana

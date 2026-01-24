@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Optional
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Numeric, String
+from sqlalchemy import DateTime, Enum, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base, JSONB_TYPE, UUID_TYPE
@@ -18,15 +18,38 @@ if TYPE_CHECKING:
 
 
 class LotType(str, enum.Enum):
-    """Lot type matching database CHECK constraint."""
+    """Lot type matching database CHECK constraint.
 
-    RAW = "RAW"  # Raw material receipt
-    DEB = "DEB"  # Deboned meat
-    BULK = "BULK"  # Bulk buffer
-    MIX = "MIX"  # Mixed batch
-    SKW = "SKW"  # Skewered rod
-    FRZ = "FRZ"  # Frozen
-    FG = "FG"  # Finished goods
+    Extended per INITIAL-11 to include SKU-specific types.
+    """
+
+    RAW = "RAW"      # Raw material receipt
+    DEB = "DEB"      # Deboned meat
+    BULK = "BULK"    # Bulk buffer
+    MIX = "MIX"      # Mixed batch
+    SKW = "SKW"      # Skewered rod (legacy)
+    SKW15 = "SKW15"  # 15g skewer rod
+    SKW30 = "SKW30"  # 30g skewer rod
+    FRZ = "FRZ"      # Frozen (legacy)
+    FRZ15 = "FRZ15"  # Frozen 15g
+    FRZ30 = "FRZ30"  # Frozen 30g
+    FG = "FG"        # Finished goods (legacy)
+    FG15 = "FG15"    # Finished goods 15g
+    FG30 = "FG30"    # Finished goods 30g
+    PAL = "PAL"      # Pallet
+    SHIP = "SHIP"    # Shipment
+
+
+class LotStatus(str, enum.Enum):
+    """Lot lifecycle status per INITIAL-11."""
+
+    CREATED = "CREATED"
+    QUARANTINE = "QUARANTINE"
+    RELEASED = "RELEASED"
+    HOLD = "HOLD"
+    REJECTED = "REJECTED"
+    CONSUMED = "CONSUMED"
+    FINISHED = "FINISHED"
 
 
 class Lot(Base):
@@ -43,6 +66,15 @@ class Lot(Base):
     lot_type: Mapped[Optional[LotType]] = mapped_column(
         Enum(LotType, name="lot_type", create_constraint=False), nullable=True
     )
+
+    # Phase 8.1: Step index for canonical 11-step tracking (0-10)
+    step_index: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
+    # Phase 8.1: Lot lifecycle status
+    status: Mapped[str] = mapped_column(
+        String(20), default=LotStatus.CREATED.value
+    )
+
     production_run_id: Mapped[Optional[UUID]] = mapped_column(
         UUID_TYPE,
         ForeignKey("production_runs.id"),

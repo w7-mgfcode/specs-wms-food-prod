@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from app.models.lot import Lot
     from app.models.production import ProductionRun
     from app.models.qc import QCDecision
+    from app.models.run import RunStepExecution
 
 
 class UserRole(str, enum.Enum):
@@ -78,14 +79,16 @@ class User(Base):
         DateTime(timezone=True), nullable=True
     )
 
-    # Relationships
+    # Relationships - Production
     production_runs: Mapped[list["ProductionRun"]] = relationship(
-        "ProductionRun", back_populates="operator"
+        "ProductionRun", foreign_keys="ProductionRun.operator_id", back_populates="operator"
     )
     lots: Mapped[list["Lot"]] = relationship("Lot", back_populates="operator")
     qc_decisions: Mapped[list["QCDecision"]] = relationship(
         "QCDecision", back_populates="operator"
     )
+
+    # Relationships - Flow Editor
     flow_definitions: Mapped[list["FlowDefinition"]] = relationship(
         "FlowDefinition", back_populates="creator"
     )
@@ -94,4 +97,19 @@ class User(Base):
     )
     flow_versions_published: Mapped[list["FlowVersion"]] = relationship(
         "FlowVersion", foreign_keys="FlowVersion.published_by", back_populates="publisher"
+    )
+
+    # Phase 8.1: Flow versions reviewed by this user
+    flow_versions_reviewed: Mapped[list["FlowVersion"]] = relationship(
+        "FlowVersion", foreign_keys="FlowVersion.reviewed_by", back_populates="reviewer"
+    )
+
+    # Phase 8.1: Production runs started by this user
+    production_runs_started: Mapped[list["ProductionRun"]] = relationship(
+        "ProductionRun", foreign_keys="ProductionRun.started_by", back_populates="starter"
+    )
+
+    # Phase 8.1: Step executions operated by this user
+    step_executions: Mapped[list["RunStepExecution"]] = relationship(
+        "RunStepExecution", back_populates="operator"
     )

@@ -4,9 +4,10 @@
 
 Flow-Viz React is a **food production traceability system** designed for manufacturing environments. The system provides real-time visualization of production flows, lot tracking with full genealogy, and quality control gate management.
 
-### Migration Strategy (Phase 1-5)
+### Migration Strategy (Phase 1-5) & Schema Alignment (Phase 8)
 
 **Status**: ✅ **Phase 5 Complete** — Security hardening with RBAC and rate limiting
+**Status**: 🔄 **Phase 8.1 In Progress** — Schema alignment for production flow execution tracking
 
 Migration from Node/Express + Supabase to **FastAPI** using the **strangler pattern**:
 
@@ -17,7 +18,19 @@ Migration from Node/Express + Supabase to **FastAPI** using the **strangler patt
 | **Phase 3** | ✅ Complete | First Flow lane-based UI with buffer visualization |
 | **Phase 4** | ✅ Complete | Frontend-FastAPI integration, API client layer, TanStack Query |
 | **Phase 5** | ✅ Complete | Security hardening: RBAC, rate limiting, enhanced JWT |
+| **Phase 8.1** | 🔄 In Progress | Schema alignment: step tracking, lot status lifecycle, flow version governance |
 | **Phase 6** | 🔄 Planned | Secrets management, infrastructure hardening, monitoring |
+
+**Phase 8.1 Achievements** (Schema Alignment):
+- ✅ **Lot Status Lifecycle**: 7-state status enum (CREATED, QUARANTINE, RELEASED, HOLD, REJECTED, CONSUMED, FINISHED)
+- ✅ **Step Index Tracking**: Canonical 11-step production flow (0-10) on lots and production runs
+- ✅ **RunStepExecution Model**: Granular tracking of execution status per step (PENDING, IN_PROGRESS, COMPLETED, SKIPPED)
+- ✅ **Extended LotType Enum**: SKU-specific types (SKW15, SKW30, FRZ15, FRZ30, FG15, FG30) + PAL, SHIP
+- ✅ **Flow Version Governance**: REVIEW status + reviewed_by column for approval workflow
+- ✅ **Enhanced RunStatus**: New states (IDLE, RUNNING, HOLD, COMPLETED, ABORTED, ARCHIVED) with migration from legacy values
+- ✅ **Production Run Audit Trail**: started_by column, idempotency_key for duplicate prevention, completed_at timestamp
+- ✅ **Flow Version Immutability**: Database trigger protecting published versions from accidental modification
+- ✅ **5 Database migrations** with comprehensive schema validation and backward-compatible downgrades
 
 **Phase 5 Achievements** (Security Hardening):
 - ✅ Role-Based Access Control (RBAC) with FastAPI dependency injection
@@ -274,67 +287,226 @@ export const queryKeys = {
        |                    |                    |
        |                    +--------+-----------+
        v                             |
-+---------------+            +---------------+
-|    phases     |            |production_run |
-|               |            |               |
-| - phase_num   |            | - run_code    |
-| - name        |            | - status      |
-| - stream_id   |            | - operator_id |
-+---------------+            +---------------+
-       |                             |
-       +-------------+---------------+
-                     |
-                     v
-              +---------------+
-              |     lots      |
-              |               |<------------------+
-              | - lot_code    |                   |
-              | - lot_type    |     +-------------+-----+
-              | - weight_kg   |     | lot_genealogy     |
-              | - temp_c      |     | (parent -> child) |
-              +---------------+     +-------------------+
-                     |
-                     v
-              +---------------+
-              | qc_decisions  |
-              |               |
-              | - decision    |
-              | - notes       |
-              | - timestamp   |
-              +---------------+
++---------------+            +-------------------+
+|    phases     |            |production_runs(p8)|
+|               |            |                   |
+| - phase_num   |            | - run_code        |
+| - name        |            | - status(p8.1)    |
+| - stream_id   |            | - flow_version_id |
++---------------+            | - current_step(p8)|
+       |                      | - started_by(p8)  |
+       +----------+-----------+ - completed_at(p8)|
+                  |             - idempotency_key |
+                  v             +-------------------+
+           +-------------------+          |
+           |   lots (Phase 8.1)|          |
+           |                   |          |
+           | - lot_code        |          +--------+
+           | - lot_type(ext)   |                   |
+           | - weight_kg       |    +------------+------+
+           | - temp_c          |    |run_step_exec(p8.1)|
+           | - step_index(p8)  |    |                   |
+           | - status(p8.1)    |    | - run_id          |
+           +-------------------+    | - step_index      |
+                  |                 | - node_id         |
+                  |<----------------| - status          |
+                  |                 | - operator_id     |
+                  |                 +-------------------+
+                  |
+                  +--------+
+                           |
+                  +--------v--------+
+                  | lot_genealogy   |
+                  | (parent -> child)|
+                  +--------+--------+
+                           |
+                  +--------v--------+
+                  | qc_decisions    |
+                  |                 |
+                  | - decision      |
+                  | - notes         |
+                  | - timestamp     |
+                  +-----------------+
+
+Flow Definitions (Phase 8.1 governance):
++------------------+     +------------------+
+| flow_definitions |<----| flow_versions(p8)|
+|                  |     |                  |
+| - id             |     | - version_num    |
+| - name           |     | - status(p8.1)   |
+| - created_by     |     | - graph_schema   |
+|                  |     | - reviewed_by(p8)|
++------------------+     | - published_by   |
+                         +------------------+
+
+Legend:
+(p8)   = Phase 8.1 addition
+(p8.1) = Phase 8.1 addition
+(ext)  = Extended enum values
 ```
 
 ---
 
 ## Data Flow
 
-### Production Run Lifecycle
+### Production Run Lifecycle (Phase 8.1 Enhanced)
 
 ```
-1. START RUN
-   +-> Create production_run record
-   +-> Initialize phase to 0
+1. START RUN (Phase 8.1)
+   +-> Create production_run record with status = IDLE
+   +-> Assign flow_version (immutable, pinned at creation)
+   +-> Set started_by user for audit trail
+   +-> Generate idempotency_key for duplicate prevention
+   +-> Initialize current_step_index to 0
+   +-> Create 11 RunStepExecution records (indices 0-10, status = PENDING)
 
-2. PHASE PROGRESSION
-   +-> Operator advances phases
-   +-> Auto-registration creates lots (if enabled)
-   +-> QC gates trigger decisions
+2. STEP PROGRESSION (Phase 8.1)
+   +-> Advance current_step_index (0 → 10)
+   +-> Update corresponding RunStepExecution status
+   +-> Transition run status: IDLE → RUNNING
+   +-> Operator assigned to step execution for audit
 
-3. LOT REGISTRATION
+3. LOT REGISTRATION (Phase 8.1)
    +-> Create lot record with type, weight, temp
+   +-> Assign step_index (0-10) reflecting current production step
+   +-> Set status = CREATED (immutable audit trail)
    +-> Link parent lots via lot_genealogy
-   +-> Associate with current phase
+   +-> Associate with current phase and run
 
-4. QC DECISION
+4. LOT STATUS TRANSITIONS (Phase 8.1)
+   +-> CREATED → QUARANTINE (pending QC/testing)
+   +-> QUARANTINE → RELEASED (QC approved)
+   +-> RELEASED → CONSUMED (used in downstream processing)
+   +-> Any → HOLD (blocking issue detected)
+   +-> HOLD/QUARANTINE → REJECTED (failed criteria)
+   +-> CONSUMED → FINISHED (production complete)
+
+5. QC DECISION (Phase 8.1)
    +-> Record PASS/HOLD/FAIL at gate
+   +-> Trigger lot status transition (RELEASED on PASS, HOLD on HOLD)
    +-> Trigger alerts for HOLD/FAIL
    +-> Block progression if blocking gate
 
-5. END RUN
+6. END RUN (Phase 8.1)
+   +-> Mark all RunStepExecutions with status != COMPLETED as SKIPPED
    +-> Generate summary statistics
-   +-> Mark run as COMPLETED
-   +-> Display summary modal
+   +-> Transition status: RUNNING → COMPLETED
+   +-> Set completed_at timestamp
+   +-> Display summary modal with step execution details
 ```
+
+## Phase 8.1 Schema Details
+
+### Lot Type Enumeration (Extended)
+
+Phase 8.1 extends LotType to support SKU-specific variants and shipment tracking:
+
+```python
+class LotType(str, enum.Enum):
+    RAW = "RAW"      # Raw material receipt
+    DEB = "DEB"      # Deboned meat
+    BULK = "BULK"    # Bulk buffer
+    MIX = "MIX"      # Mixed batch
+    # Legacy (backward compatible)
+    SKW = "SKW"      # Skewered rod (legacy, any size)
+    FRZ = "FRZ"      # Frozen (legacy, any size)
+    FG = "FG"        # Finished goods (legacy, any size)
+    # Phase 8.1: SKU-specific variants
+    SKW15 = "SKW15"  # 15g skewer rod
+    SKW30 = "SKW30"  # 30g skewer rod
+    FRZ15 = "FRZ15"  # Frozen 15g
+    FRZ30 = "FRZ30"  # Frozen 30g
+    FG15 = "FG15"    # Finished goods 15g
+    FG30 = "FG30"    # Finished goods 30g
+    # Packaging & Shipping
+    PAL = "PAL"      # Pallet
+    SHIP = "SHIP"    # Shipment
+```
+
+### Lot Status Lifecycle (Phase 8.1)
+
+| Status | Description | Allowed Transitions |
+|--------|-------------|-------------------|
+| `CREATED` | Initial state, lot just registered | QUARANTINE, HOLD |
+| `QUARANTINE` | Awaiting QC testing/approval | RELEASED, REJECTED, HOLD |
+| `RELEASED` | QC approved, ready for use | CONSUMED, HOLD, REJECTED |
+| `CONSUMED` | Used in downstream processing | FINISHED |
+| `HOLD` | Blocked pending investigation | RELEASED, REJECTED (after resolution) |
+| `REJECTED` | Failed QC or quality gates | (terminal, no transitions) |
+| `FINISHED` | Production complete | (terminal, no transitions) |
+
+**Audit Trail**: All status transitions are append-only logged to `lot_status_history` (future phase).
+
+### Production Run Status Lifecycle (Phase 8.1)
+
+Phase 8.1 replaces legacy status (ACTIVE, CANCELLED) with new states:
+
+| Status | Description | Valid Transitions |
+|--------|-------------|-------------------|
+| `IDLE` | Created but not yet started | RUNNING, ABORTED |
+| `RUNNING` | Active execution in progress | COMPLETED, HOLD, ABORTED |
+| `HOLD` | Paused due to issue (CCP gate failure, supply shortage) | RUNNING, ABORTED |
+| `COMPLETED` | Successfully finished all steps | ARCHIVED |
+| `ABORTED` | Terminated early (operator cancellation, critical error) | (terminal) |
+| `ARCHIVED` | Historical record (removed from active views) | (terminal) |
+
+**Migration**: Phase 8.1 alembic migration converts:
+- `ACTIVE` → `RUNNING`
+- `CANCELLED` → `ABORTED`
+
+### Flow Version Status & Governance (Phase 8.1)
+
+| Status | Description | Allowed Transitions | Immutability |
+|--------|-------------|-------------------|-------------|
+| `DRAFT` | Work in progress | REVIEW, DEPRECATED | Fully mutable |
+| `REVIEW` | Pending approval (new in Phase 8.1) | PUBLISHED, DEPRECATED | Mutable (review notes only) |
+| `PUBLISHED` | Active production version | DEPRECATED | **IMMUTABLE** (database trigger enforces) |
+| `DEPRECATED` | Replaced by newer version | (terminal) | N/A |
+
+**Governance Workflow (Phase 8.1)**:
+1. Designer creates flow in DRAFT status
+2. Designer requests review → transitions to REVIEW
+3. Reviewer examines flow → adds reviewed_by audit trail
+4. Reviewer approves → transitions to PUBLISHED
+5. Published versions are protected from modification (trigger blocks UPDATE on graph_schema)
+6. When superseded, status → DEPRECATED (non-blocking status change allowed)
+
+### RunStepExecution Model (Phase 8.1)
+
+Each production run creates 11 step execution records (one per canonical step 0-10):
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `id` | UUID | Primary key |
+| `run_id` | UUID | FK to production_runs.id |
+| `step_index` | Integer | Position in 11-step flow (0-10) |
+| `node_id` | String | Flow node ID (e.g., "node-3") for visual correlation |
+| `status` | String | PENDING → IN_PROGRESS → COMPLETED (or SKIPPED) |
+| `started_at` | Timestamp | When operator began this step |
+| `completed_at` | Timestamp | When operator finished this step |
+| `operator_id` | UUID | Which operator executed this step (audit trail) |
+| `created_at` | Timestamp | Record creation time |
+
+**Status Enum (StepExecutionStatus)**:
+- `PENDING`: Not yet started
+- `IN_PROGRESS`: Currently being executed
+- `COMPLETED`: Finished successfully
+- `SKIPPED`: Step was bypassed (marked when run ends early)
+
+### Role Permissions Updated (Phase 8.1)
+
+No new roles introduced, but permissions matrix refined:
+
+| Operation | ADMIN | MANAGER | OPERATOR | AUDITOR | VIEWER |
+|-----------|:-----:|:-------:|:--------:|:-------:|:------:|
+| Create production run | ✓ | ✓ | ✓ | - | - |
+| Advance step (current_step_index) | ✓ | ✓ | ✓ | - | - |
+| Update lot status | ✓ | ✓ | ✓ | - | - |
+| Approve flow version (REVIEW → PUBLISHED) | ✓ | ✓ | - | - | - |
+| View run step executions | ✓ | ✓ | ✓ | ✓ | - |
+| View lot status history | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+---
 
 ### Role-Based Access Control (Phase 5 - RBAC Enforcement)
 
@@ -557,7 +729,8 @@ npm run generate:api
 - [Phase 2 API Backend Summary](phase/phase-2_api-backend.md) — Core API endpoints
 - [Phase 3 First Flow Summary](phase/phase-3_first-flow.md) — Lane-based UI
 - [Phase 4 Frontend-FastAPI Integration](phase/phase-4_frontend-fastapi-integration.md)
-- [Phase 5 Security Hardening](phase/phase-5_security-hardening-rbac-ratelimit.md) — **NEW** ✨
+- [Phase 5 Security Hardening](phase/phase-5_security-hardening-rbac-ratelimit.md)
+- [Phase 8.1 Schema Alignment](phase/phase-8_schema-alignment.md) — **NEW** ✨ (Step tracking, lot status lifecycle, flow governance)
 
 ### Technical Documentation
 - [ENVIRONMENT.md](ENVIRONMENT.md) — Environment variables
@@ -567,16 +740,27 @@ npm run generate:api
   - [ADR-0003: RBAC Enforcement](decisions/0003-rbac-enforcement.md) — **NEW** ✨ (Phase 5)
 
 ### Code Documentation
-- [Database Migrations](../backend/alembic/)
+- [Database Migrations](../backend/alembic/) — **UPDATED** Phase 8.1 (5 new migrations)
+  - [20260124_phase81_01: Lot step_index and status](../backend/alembic/versions/20260124_phase81_01_add_lot_step_index_status.py)
+  - [20260124_phase81_02: Flow version governance](../backend/alembic/versions/20260124_phase81_02_enhance_flow_version_status.py)
+  - [20260124_phase81_03: Production run enhancements](../backend/alembic/versions/20260124_phase81_03_enhance_production_runs.py)
+  - [20260124_phase81_04: RunStepExecution model](../backend/alembic/versions/20260124_phase81_04_add_run_step_executions.py)
+  - [20260124_phase81_05: Flow version immutability](../backend/alembic/versions/20260124_phase81_05_add_flow_version_immutability_trigger.py)
 - [API Tests](../backend/tests/)
-  - [RBAC Test Suite](../backend/tests/test_rbac.py) — **NEW** ✨ (Phase 5)
-  - [Rate Limiting Tests](../backend/tests/test_rate_limiting.py) — **NEW** ✨ (Phase 5)
+  - [RBAC Test Suite](../backend/tests/test_rbac.py) (Phase 5)
+  - [Rate Limiting Tests](../backend/tests/test_rate_limiting.py) (Phase 5)
+- [Backend Models](../backend/app/models/) — **UPDATED** Phase 8.1
+  - [lot.py](../backend/app/models/lot.py) — LotType (extended), LotStatus (new), Lot model (step_index, status)
+  - [production.py](../backend/app/models/production.py) — RunStatus (updated), ProductionRun (enhanced)
+  - [run.py](../backend/app/models/run.py) — **NEW** RunStepExecution model
+  - [flow.py](../backend/app/models/flow.py) — FlowVersionStatus (REVIEW, DEPRECATED), reviewed_by column
+  - [user.py](../backend/app/models/user.py) — New relationship fields (flow_versions_reviewed, step_executions)
 - [Frontend Types](../flow-viz-react/src/types/)
 - [Flow Types](../flow-viz-react/src/types/flow.ts)
 - [API Client](../flow-viz-react/src/lib/api/)
 - [Query Hooks](../flow-viz-react/src/hooks/)
-- [RBAC Dependencies](../backend/app/api/deps.py) — **UPDATED** (Phase 5)
-- [Rate Limiter Config](../backend/app/rate_limit.py) — **NEW** ✨ (Phase 5)
+- [RBAC Dependencies](../backend/app/api/deps.py) (Phase 5)
+- [Rate Limiter Config](../backend/app/rate_limit.py) (Phase 5)
 
 ### PRPs (Pydantic AI Agent Templates)
 - [Phase 5 Security Hardening PRP](../PRPs/phase5-security-hardening-rbac-ratelimit.md) - **NEW** ✨

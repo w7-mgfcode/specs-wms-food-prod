@@ -11,15 +11,17 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import JSONB_TYPE, UUID_TYPE, Base
 
 if TYPE_CHECKING:
+    from app.models.production import ProductionRun
     from app.models.user import User
 
 
 class FlowVersionStatus(str, enum.Enum):
-    """Flow version lifecycle states."""
+    """Flow version lifecycle states per INITIAL-11."""
 
     DRAFT = "DRAFT"
+    REVIEW = "REVIEW"         # Phase 8.1: Pending approval
     PUBLISHED = "PUBLISHED"
-    ARCHIVED = "ARCHIVED"
+    DEPRECATED = "DEPRECATED"  # Phase 8.1: Replaced by newer version
 
 
 class FlowDefinition(Base):
@@ -67,6 +69,9 @@ class FlowVersion(Base):
     Maps to public.flow_versions table.
     The graph_schema JSONB field stores the React Flow JSON structure:
     { nodes: [], edges: [], viewport: {} }
+
+    IMPORTANT: Once status is PUBLISHED, the version becomes immutable
+    (enforced by database trigger). Only status change to DEPRECATED is allowed.
     """
 
     __tablename__ = "flow_versions"
@@ -103,6 +108,14 @@ class FlowVersion(Base):
         ForeignKey("users.id"),
         nullable=True,
     )
+
+    # Phase 8.1: Reviewed by (for REVIEW → PUBLISHED transition)
+    reviewed_by: Mapped[UUID | None] = mapped_column(
+        UUID_TYPE,
+        ForeignKey("users.id"),
+        nullable=True,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
@@ -116,4 +129,12 @@ class FlowVersion(Base):
     )
     publisher: Mapped[Optional["User"]] = relationship(
         "User", foreign_keys=[published_by], back_populates="flow_versions_published"
+    )
+    reviewer: Mapped[Optional["User"]] = relationship(
+        "User", foreign_keys=[reviewed_by], back_populates="flow_versions_reviewed"
+    )
+
+    # Phase 8.1: Production runs using this version
+    production_runs: Mapped[list["ProductionRun"]] = relationship(
+        "ProductionRun", back_populates="flow_version"
     )
