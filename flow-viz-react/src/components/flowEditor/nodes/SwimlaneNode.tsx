@@ -51,7 +51,7 @@ function SwimlaneNodeComponent({ data, selected }: NodeProps<EditorNode>) {
                         {nodeData.label[language]}
                     </span>
                     <span className="text-[10px] text-gray-400 uppercase tracking-wider ml-auto">
-                        Swimlane
+                        {language === 'hu' ? 'Úszósáv' : 'Swimlane'}
                     </span>
                 </div>
 

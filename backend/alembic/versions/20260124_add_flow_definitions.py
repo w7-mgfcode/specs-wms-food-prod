@@ -25,7 +25,7 @@ def upgrade() -> None:
     # Create flow_definitions table
     op.create_table(
         "flow_definitions",
-        sa.Column("id", sa.Uuid(), nullable=False, default=sa.text("gen_random_uuid()")),
+        sa.Column("id", sa.Uuid(), nullable=False, server_default=sa.text("gen_random_uuid()")),
         sa.Column("name", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("created_by", sa.Uuid(), nullable=True),
@@ -48,7 +48,7 @@ def upgrade() -> None:
     # Create flow_versions table
     op.create_table(
         "flow_versions",
-        sa.Column("id", sa.Uuid(), nullable=False, default=sa.text("gen_random_uuid()")),
+        sa.Column("id", sa.Uuid(), nullable=False, server_default=sa.text("gen_random_uuid()")),
         sa.Column("flow_definition_id", sa.Uuid(), nullable=False),
         sa.Column("version_num", sa.Integer(), nullable=False),
         sa.Column(

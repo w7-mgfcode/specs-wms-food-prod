@@ -48,9 +48,9 @@ export interface FlowDefinitionListItem {
     created_at: string;
     updated_at: string;
     latest_version_num: number | null;
-    latest_version_status: FlowVersionStatus | null;
-    published_version_num: number | null;
+    latest_status: FlowVersionStatus | null;  // Matches backend field name
     version_count: number;
+    published_version_num: number | null;
     created_by_name: string | null;
 }
 

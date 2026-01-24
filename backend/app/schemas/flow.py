@@ -156,6 +156,8 @@ class FlowDefinitionListItem(BaseModel):
     latest_version_num: int | None = None
     latest_status: FlowVersionStatus | None = None
     version_count: int = 0
+    published_version_num: int | None = None
+    created_by_name: str | None = None
 
 
 class FlowVersionResponse(BaseModel):

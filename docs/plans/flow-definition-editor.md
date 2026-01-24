@@ -119,7 +119,7 @@ Since manufacturing flows branch (QC Pass/Fail), a linear list is insufficient. 
     *   Visual error indicators (red outline) on invalid nodes.
 
 ### Runtime Integration (The "Overlay")
-The definitions are blueprints. Whent a `ProductionRun` starts, it references `flow_version_id`.
+The definitions are blueprints. When a `ProductionRun` starts, it references `flow_version_id`.
 The UI fetches:
 1.  The `graph_schema` (from `flow_versions`).
 2.  The `runtime_state` (lots counts per node_id).

@@ -39,43 +39,57 @@ async def list_flow_definitions(
     Requires: Any authenticated user.
     Rate limit: 100/minute.
     """
-    # Query definitions with aggregated version info
-    stmt = select(FlowDefinition).order_by(FlowDefinition.updated_at.desc())
-    result = await db.execute(stmt)
-    definitions = result.scalars().all()
-
-    items = []
-    for defn in definitions:
-        # Get version summary for each definition
-        version_stmt = select(
+    # Subquery to aggregate version info per flow definition
+    version_agg = (
+        select(
+            FlowVersion.flow_definition_id,
             func.count(FlowVersion.id).label("version_count"),
             func.max(FlowVersion.version_num).label("latest_version_num"),
-        ).where(FlowVersion.flow_definition_id == defn.id)
-        version_result = await db.execute(version_stmt)
-        version_info = version_result.one()
-
-        # Get latest version status
-        latest_status = None
-        if version_info.latest_version_num:
-            latest_stmt = select(FlowVersion.status).where(
-                FlowVersion.flow_definition_id == defn.id,
-                FlowVersion.version_num == version_info.latest_version_num,
-            )
-            latest_result = await db.execute(latest_stmt)
-            latest_status = latest_result.scalar_one_or_none()
-
-        items.append(
-            FlowDefinitionListItem(
-                id=defn.id,
-                name=defn.name,
-                description=defn.description,
-                created_at=defn.created_at,
-                updated_at=defn.updated_at,
-                latest_version_num=version_info.latest_version_num,
-                latest_status=latest_status,
-                version_count=version_info.version_count or 0,
-            )
         )
+        .group_by(FlowVersion.flow_definition_id)
+        .subquery()
+    )
+
+    # Subquery to get the status of the latest version
+    latest_version = (
+        select(
+            FlowVersion.flow_definition_id,
+            FlowVersion.status.label("latest_status"),
+        )
+        .distinct(FlowVersion.flow_definition_id)
+        .order_by(FlowVersion.flow_definition_id, FlowVersion.version_num.desc())
+        .subquery()
+    )
+
+    # Main query joining definitions with aggregated version info
+    stmt = (
+        select(
+            FlowDefinition,
+            version_agg.c.version_count,
+            version_agg.c.latest_version_num,
+            latest_version.c.latest_status,
+        )
+        .outerjoin(version_agg, FlowDefinition.id == version_agg.c.flow_definition_id)
+        .outerjoin(latest_version, FlowDefinition.id == latest_version.c.flow_definition_id)
+        .order_by(FlowDefinition.updated_at.desc())
+    )
+
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    items = [
+        FlowDefinitionListItem(
+            id=row.FlowDefinition.id,
+            name=row.FlowDefinition.name,
+            description=row.FlowDefinition.description,
+            created_at=row.FlowDefinition.created_at,
+            updated_at=row.FlowDefinition.updated_at,
+            latest_version_num=row.latest_version_num,
+            latest_status=row.latest_status,
+            version_count=row.version_count or 0,
+        )
+        for row in rows
+    ]
 
     return items
 
@@ -108,7 +122,7 @@ async def create_flow_definition(
     version = FlowVersion(
         flow_definition_id=flow_def.id,
         version_num=1,
-        status=FlowVersionStatus.DRAFT,
+        status=FlowVersionStatus.DRAFT.value,
         graph_schema=initial_graph,
         created_by=current_user.id,
     )
@@ -261,7 +275,7 @@ async def get_latest_draft(
         select(FlowVersion)
         .where(
             FlowVersion.flow_definition_id == flow_id,
-            FlowVersion.status == FlowVersionStatus.DRAFT,
+            FlowVersion.status == FlowVersionStatus.DRAFT.value,
         )
         .order_by(FlowVersion.version_num.desc())
         .limit(1)
@@ -309,10 +323,10 @@ async def update_flow_version(
             detail=f"Version {version_num} not found for this flow",
         )
 
-    if version.status != FlowVersionStatus.DRAFT:
+    if version.status != FlowVersionStatus.DRAFT.value:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Cannot edit {version.status.value} version. Only DRAFT versions can be modified.",
+            detail=f"Cannot edit {version.status} version. Only DRAFT versions can be modified.",
         )
 
     # Update the graph schema
@@ -363,10 +377,10 @@ async def publish_flow_version(
             detail=f"Version {version_num} not found for this flow",
         )
 
-    if version.status != FlowVersionStatus.DRAFT:
+    if version.status != FlowVersionStatus.DRAFT.value:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Cannot publish {version.status.value} version. Only DRAFT versions can be published.",
+            detail=f"Cannot publish {version.status} version. Only DRAFT versions can be published.",
         )
 
     # Validate graph has required structure for publishing
@@ -387,7 +401,7 @@ async def publish_flow_version(
 
     # Publish the version
     now = datetime.now(UTC)
-    version.status = FlowVersionStatus.PUBLISHED
+    version.status = FlowVersionStatus.PUBLISHED.value
     version.published_at = now
     version.published_by = current_user.id
 
@@ -395,7 +409,7 @@ async def publish_flow_version(
     new_draft = FlowVersion(
         flow_definition_id=flow_id,
         version_num=version_num + 1,
-        status=FlowVersionStatus.DRAFT,
+        status=FlowVersionStatus.DRAFT.value,
         graph_schema=version.graph_schema,  # Copy the published graph
         created_by=current_user.id,
     )
@@ -458,7 +472,7 @@ async def fork_flow_version(
     # Check if there's already a draft
     draft_stmt = select(FlowVersion).where(
         FlowVersion.flow_definition_id == flow_id,
-        FlowVersion.status == FlowVersionStatus.DRAFT,
+        FlowVersion.status == FlowVersionStatus.DRAFT.value,
     )
     draft_result = await db.execute(draft_stmt)
     existing_draft = draft_result.scalar_one_or_none()
@@ -473,7 +487,7 @@ async def fork_flow_version(
     new_draft = FlowVersion(
         flow_definition_id=flow_id,
         version_num=max_version + 1,
-        status=FlowVersionStatus.DRAFT,
+        status=FlowVersionStatus.DRAFT.value,
         graph_schema=source.graph_schema,
         created_by=current_user.id,
     )

@@ -81,6 +81,10 @@ export const router = createHashRouter([
                                 element: <FlowEditorPage />,
                             },
                             {
+                                path: ':flowId/versions',
+                                element: <FlowEditorPage />,  // TODO: Create dedicated FlowVersionsPage
+                            },
+                            {
                                 path: ':flowId/v/:versionNum',
                                 element: <FlowEditorPage />,
                             },

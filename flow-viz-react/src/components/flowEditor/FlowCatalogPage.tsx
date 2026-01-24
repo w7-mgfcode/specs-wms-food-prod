@@ -195,26 +195,34 @@ export function FlowCatalogPage() {
                                 {/* Version info */}
                                 <div className="mt-3 space-y-2">
                                     {/* Latest version */}
-                                    <div className="flex items-center gap-2 text-xs">
-                                        <span className="text-gray-400">
-                                            {language === 'hu' ? 'Legújabb:' : 'Latest:'}
-                                        </span>
-                                        <span className="text-white">
-                                            v{flow.latest_version_num}
-                                        </span>
-                                        <span
-                                            className={cn(
-                                                'px-1.5 py-0.5 rounded text-[10px] font-medium',
-                                                flow.latest_version_status === 'DRAFT'
-                                                    ? 'bg-yellow-500/20 text-yellow-400'
-                                                    : flow.latest_version_status === 'PUBLISHED'
-                                                        ? 'bg-green-500/20 text-green-400'
-                                                        : 'bg-gray-500/20 text-gray-400'
+                                    {flow.latest_version_num != null ? (
+                                        <div className="flex items-center gap-2 text-xs">
+                                            <span className="text-gray-400">
+                                                {language === 'hu' ? 'Legújabb:' : 'Latest:'}
+                                            </span>
+                                            <span className="text-white">
+                                                v{flow.latest_version_num}
+                                            </span>
+                                            {flow.latest_status && (
+                                                <span
+                                                    className={cn(
+                                                        'px-1.5 py-0.5 rounded text-[10px] font-medium',
+                                                        flow.latest_status === 'DRAFT'
+                                                            ? 'bg-yellow-500/20 text-yellow-400'
+                                                            : flow.latest_status === 'PUBLISHED'
+                                                                ? 'bg-green-500/20 text-green-400'
+                                                                : 'bg-gray-500/20 text-gray-400'
+                                                    )}
+                                                >
+                                                    {flow.latest_status}
+                                                </span>
                                             )}
-                                        >
-                                            {flow.latest_version_status}
-                                        </span>
-                                    </div>
+                                        </div>
+                                    ) : (
+                                        <div className="text-xs text-gray-500">
+                                            {language === 'hu' ? 'Nincs verzió' : 'No versions yet'}
+                                        </div>
+                                    )}
 
                                     {/* Published version */}
                                     {flow.published_version_num && (

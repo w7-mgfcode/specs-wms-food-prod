@@ -194,6 +194,18 @@ function FlowCanvasComponent({ onDragOver, onDrop }: FlowCanvasProps) {
     // Keyboard shortcuts
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
+            // Skip if target is an editable element (input, textarea, contenteditable)
+            const target = event.target as HTMLElement;
+            if (
+                target instanceof HTMLInputElement ||
+                target instanceof HTMLTextAreaElement ||
+                target.isContentEditable ||
+                target.getAttribute('role') === 'textbox' ||
+                target.closest('input, textarea, [contenteditable="true"]')
+            ) {
+                return;
+            }
+
             // Delete key to remove selected node
             if (event.key === 'Delete' || event.key === 'Backspace') {
                 const { selectedNodeId, deleteNode } = useFlowEditorStore.getState();

@@ -33,7 +33,7 @@ Build a complete Flow Definition Editor system that:
 
 - **Business Value**: Process Engineers can modify workflows without developer involvement
 - **Agility**: Manufacturing flows can be updated and versioned independently
-- **Compliance**: HACCP requires documented, immutable process definitions
+- **Compliance**: HACCP requires process definitions to be documented and immutable
 - **Audit Trail**: Version history provides full traceability of flow changes
 
 ## What

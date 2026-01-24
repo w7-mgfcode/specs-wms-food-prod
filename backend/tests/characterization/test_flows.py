@@ -25,7 +25,7 @@ async def create_test_flow(db: AsyncSession, user_id: UUID) -> FlowDefinition:
     version = FlowVersion(
         flow_definition_id=flow_def.id,
         version_num=1,
-        status=FlowVersionStatus.DRAFT,
+        status=FlowVersionStatus.DRAFT.value,
         graph_schema={
             "nodes": [],
             "edges": [],
@@ -222,7 +222,7 @@ async def test_update_published_version_fails(
     stmt = select(FlowVersion).where(FlowVersion.flow_definition_id == flow.id)
     result = await db_session.execute(stmt)
     version = result.scalar_one()
-    version.status = FlowVersionStatus.PUBLISHED
+    version.status = FlowVersionStatus.PUBLISHED.value
     version.published_at = datetime.now(timezone.utc)
     await db_session.commit()
 
@@ -332,7 +332,7 @@ async def test_fork_version(
     stmt = select(FlowVersion).where(FlowVersion.flow_definition_id == flow.id)
     result = await db_session.execute(stmt)
     version = result.scalar_one()
-    version.status = FlowVersionStatus.PUBLISHED
+    version.status = FlowVersionStatus.PUBLISHED.value
     version.published_at = datetime.now(timezone.utc)
     await db_session.commit()
 
@@ -382,3 +382,64 @@ async def test_list_flows_requires_authentication(client: AsyncClient):
     response = await client.get("/api/flows")
 
     assert response.status_code == 401
+
+
+# --- Model Default Tests ---
+
+
+@pytest.mark.asyncio
+async def test_flow_version_graph_schema_default_independence(
+    db_session: AsyncSession, test_operator_user: User
+):
+    """
+    Each FlowVersion instance should get its own independent graph_schema default.
+
+    Verifies that the ORM default for graph_schema creates separate dict instances
+    for each FlowVersion, not a shared mutable default.
+    """
+    # Create a flow definition
+    flow_def = FlowDefinition(
+        name={"hu": "Teszt", "en": "Test"},
+        created_by=test_operator_user.id,
+    )
+    db_session.add(flow_def)
+    await db_session.flush()
+
+    # Create two versions WITHOUT passing graph_schema (relying on the default)
+    version1 = FlowVersion(
+        flow_definition_id=flow_def.id,
+        version_num=1,
+        status=FlowVersionStatus.DRAFT.value,
+        created_by=test_operator_user.id,
+        # graph_schema not provided - should use default
+    )
+    version2 = FlowVersion(
+        flow_definition_id=flow_def.id,
+        version_num=2,
+        status=FlowVersionStatus.DRAFT.value,
+        created_by=test_operator_user.id,
+        # graph_schema not provided - should use default
+    )
+    db_session.add(version1)
+    db_session.add(version2)
+    await db_session.flush()
+
+    # Verify both have the expected default structure
+    expected_default = {"nodes": [], "edges": [], "viewport": {"x": 0, "y": 0, "zoom": 1}}
+    assert version1.graph_schema == expected_default
+    assert version2.graph_schema == expected_default
+
+    # Mutate version1's graph_schema
+    version1.graph_schema["nodes"].append({"id": "test-node"})
+
+    # Verify mutation doesn't affect version2 (independent dicts)
+    assert len(version1.graph_schema["nodes"]) == 1
+    assert len(version2.graph_schema["nodes"]) == 0, "Mutation of version1 affected version2 - defaults are shared!"
+
+    # Commit and reload from DB to verify independence persists
+    await db_session.commit()
+    await db_session.refresh(version1)
+    await db_session.refresh(version2)
+
+    assert len(version1.graph_schema["nodes"]) == 1
+    assert len(version2.graph_schema["nodes"]) == 0

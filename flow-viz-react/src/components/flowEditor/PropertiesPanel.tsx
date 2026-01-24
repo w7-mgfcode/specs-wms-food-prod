@@ -86,8 +86,10 @@ function PropertiesPanelComponent() {
                         {language === 'hu' ? 'Él tulajdonságai' : 'Edge Properties'}
                     </h3>
                     <button
+                        type="button"
                         onClick={handleClose}
                         className="p-1 hover:bg-white/10 rounded"
+                        aria-label={language === 'hu' ? 'Bezárás' : 'Close'}
                     >
                         <X className="w-4 h-4 text-gray-400" />
                     </button>
@@ -125,8 +127,10 @@ function PropertiesPanelComponent() {
                         </h3>
                     </div>
                     <button
+                        type="button"
                         onClick={handleClose}
                         className="p-1 hover:bg-white/10 rounded"
+                        aria-label={language === 'hu' ? 'Bezárás' : 'Close'}
                     >
                         <X className="w-4 h-4 text-gray-400" />
                     </button>
