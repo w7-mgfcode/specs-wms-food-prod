@@ -5,6 +5,7 @@ from app.models.inventory import Buffer, InventoryItem, StockMove
 from app.models.lot import Lot, LotGenealogy, LotStatus, LotType
 from app.models.production import Phase, ProductionRun, RunStatus, Scenario, Stream
 from app.models.qc import Decision, GateType, QCDecision, QCGate
+from app.models.qc_inspection import AuditEvent, QCInspection, TemperatureLog
 from app.models.run import RunStepExecution, StepExecutionStatus
 from app.models.user import AuthUser, User, UserRole
 
@@ -29,6 +30,10 @@ __all__ = [
     "QCDecision",
     "GateType",
     "Decision",
+    # QC inspection models (Phase 8.4)
+    "QCInspection",
+    "TemperatureLog",
+    "AuditEvent",
     # Flow models
     "FlowDefinition",
     "FlowVersion",

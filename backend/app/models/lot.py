@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from app.models.inventory import InventoryItem, StockMove
     from app.models.production import Phase, ProductionRun
     from app.models.qc import QCDecision
+    from app.models.qc_inspection import QCInspection, TemperatureLog
     from app.models.user import User
 
 
@@ -134,6 +135,14 @@ class Lot(Base):
     )
     stock_moves: Mapped[list["StockMove"]] = relationship(
         "StockMove", back_populates="lot"
+    )
+
+    # Phase 8.4: QC inspection relationships
+    qc_inspections_new: Mapped[list["QCInspection"]] = relationship(
+        "QCInspection", back_populates="lot"
+    )
+    temperature_logs: Mapped[list["TemperatureLog"]] = relationship(
+        "TemperatureLog", back_populates="lot"
     )
 
 

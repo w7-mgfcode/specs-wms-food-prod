@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from app.models.inventory import InventoryItem
     from app.models.lot import Lot
     from app.models.qc import QCGate
+    from app.models.qc_inspection import QCInspection
     from app.models.run import RunStepExecution
     from app.models.user import User
 
@@ -225,4 +226,9 @@ class ProductionRun(Base):
     # Phase 8.3: Inventory items in this run
     inventory_items: Mapped[list["InventoryItem"]] = relationship(
         "InventoryItem", back_populates="production_run"
+    )
+
+    # Phase 8.4: QC inspections in this run
+    qc_inspections: Mapped[list["QCInspection"]] = relationship(
+        "QCInspection", back_populates="production_run"
     )

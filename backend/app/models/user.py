@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from app.models.lot import Lot
     from app.models.production import ProductionRun
     from app.models.qc import QCDecision
+    from app.models.qc_inspection import AuditEvent, QCInspection, TemperatureLog
     from app.models.run import RunStepExecution
 
 
@@ -117,4 +118,15 @@ class User(Base):
     # Phase 8.3: Stock moves performed by this user
     stock_moves: Mapped[list["StockMove"]] = relationship(
         "StockMove", back_populates="operator"
+    )
+
+    # Phase 8.4: QC inspection relationships
+    qc_inspections_made: Mapped[list["QCInspection"]] = relationship(
+        "QCInspection", back_populates="inspector"
+    )
+    temperature_logs_recorded: Mapped[list["TemperatureLog"]] = relationship(
+        "TemperatureLog", back_populates="recorder"
+    )
+    audit_events: Mapped[list["AuditEvent"]] = relationship(
+        "AuditEvent", back_populates="user"
     )

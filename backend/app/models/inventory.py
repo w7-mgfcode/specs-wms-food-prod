@@ -16,6 +16,7 @@ from app.database import ARRAY_STRING_TYPE, UUID_TYPE, Base
 if TYPE_CHECKING:
     from app.models.lot import Lot
     from app.models.production import ProductionRun
+    from app.models.qc_inspection import TemperatureLog
     from app.models.user import User
 
 
@@ -45,6 +46,11 @@ class Buffer(Base):
     # Relationships
     inventory_items: Mapped[list["InventoryItem"]] = relationship(
         "InventoryItem", back_populates="buffer"
+    )
+
+    # Phase 8.4: Temperature logs for this buffer
+    temperature_logs: Mapped[list["TemperatureLog"]] = relationship(
+        "TemperatureLog", back_populates="buffer"
     )
 
 
