@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, Optional
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import JSONB_TYPE, UUID_TYPE, Base
@@ -78,9 +78,9 @@ class FlowVersion(Base):
         nullable=False,
     )
     version_num: Mapped[int] = mapped_column(Integer, nullable=False)
-    status: Mapped[FlowVersionStatus] = mapped_column(
-        Enum(FlowVersionStatus, name="flow_version_status", create_constraint=False),
-        default=FlowVersionStatus.DRAFT,
+    status: Mapped[str] = mapped_column(
+        String(50),
+        default=FlowVersionStatus.DRAFT.value,
     )
 
     # The Core Graph Definition (React Flow JSON structure)
