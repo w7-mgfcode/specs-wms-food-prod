@@ -14,6 +14,7 @@ import { FlowCatalogPage, FlowEditorPage } from './components/flowEditor';
 
 // Phase 8.5: New imports
 import { CommandCenterPage } from './pages/CommandCenterPage';
+import { CreateRunPage } from './pages/CreateRunPage';
 import {
     ActiveRunLayout,
     RunControlsTab,
@@ -59,6 +60,7 @@ export const router = createHashRouter([
                         element: <ProtectedRoute allowedRoles={['MANAGER', 'OPERATOR', 'ADMIN']} />,
                         children: [
                             { index: true, element: <CommandCenterPage /> },
+                            { path: 'new', element: <CreateRunPage /> },
                             {
                                 path: 'run/:runId',
                                 element: <ActiveRunLayout />,
