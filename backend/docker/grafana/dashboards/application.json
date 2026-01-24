@@ -1,0 +1,176 @@
+{
+  "dashboard": {
+    "title": "FlowViz - Application Metrics",
+    "uid": "flowviz-app",
+    "tags": ["flowviz", "application"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "10s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Rate (req/s)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps"
+          }
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total[5m]))",
+            "legendFormat": "Total Requests",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Error Rate (%)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": null, "color": "green" },
+                { "value": 1, "color": "yellow" },
+                { "value": 5, "color": "red" }
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m])) * 100",
+            "legendFormat": "5xx Error Rate",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "P99 Latency (ms)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": null, "color": "green" },
+                { "value": 200, "color": "yellow" },
+                { "value": 500, "color": "red" }
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m])) * 1000",
+            "legendFormat": "P99 Latency",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Lots Registered (per hour)",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 8 },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        },
+        "targets": [
+          {
+            "expr": "sum(increase(flowviz_lots_registered_total[1h]))",
+            "legendFormat": "Lots/hour",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "QC Decisions by Type",
+        "type": "piechart",
+        "gridPos": { "h": 8, "w": 6, "x": 6, "y": 8 },
+        "targets": [
+          {
+            "expr": "sum by (decision) (increase(flowviz_qc_decisions_total[1h]))",
+            "legendFormat": "{{decision}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Traceability Query Duration (P95)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s"
+          }
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(flowviz_traceability_query_duration_seconds_bucket[5m]))",
+            "legendFormat": "P95 Duration",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Lots by Type",
+        "type": "bargauge",
+        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 12 },
+        "targets": [
+          {
+            "expr": "sum by (lot_type) (flowviz_lots_registered_total)",
+            "legendFormat": "{{lot_type}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Active Database Connections",
+        "type": "gauge",
+        "gridPos": { "h": 4, "w": 6, "x": 6, "y": 16 },
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 25,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": null, "color": "green" },
+                { "value": 15, "color": "yellow" },
+                { "value": 22, "color": "red" }
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "expr": "flowviz_db_pool_connections_active",
+            "legendFormat": "Active",
+            "refId": "A"
+          }
+        ]
+      }
+    ]
+  }
+}

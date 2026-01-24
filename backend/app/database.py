@@ -1,4 +1,7 @@
-"""Async SQLAlchemy database connection and session management."""
+"""Async SQLAlchemy database connection and session management.
+
+PgBouncer-optimized configuration with transaction pooling mode.
+"""
 
 from sqlalchemy import JSON, Uuid
 from sqlalchemy.dialects.postgresql import JSONB
@@ -7,13 +10,16 @@ from sqlalchemy.orm import DeclarativeBase
 
 from app.config import settings
 
-# Create async engine with connection pooling
+# PgBouncer-optimized engine configuration
+# Transaction pooling mode requires pool_size to match PgBouncer DEFAULT_POOL_SIZE
 engine = create_async_engine(
     settings.database_url,
     echo=settings.debug,
-    pool_size=5,
-    max_overflow=10,
-    pool_pre_ping=True,  # Verify connections before use
+    pool_size=25,           # Match PgBouncer DEFAULT_POOL_SIZE
+    max_overflow=10,        # Extra connections during burst
+    pool_pre_ping=True,     # Verify connection health before use
+    pool_recycle=3600,      # Recycle connections every hour
+    pool_timeout=30,        # Wait up to 30s for available connection
 )
 
 # Session factory
