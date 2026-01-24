@@ -71,8 +71,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      # Point to PgBouncer instead of direct PostgreSQL
-      - DATABASE_URL=postgresql+asyncpg://admin:password@pgbouncer:5432/flowviz
+      # Connect directly to PostgreSQL (bypassing PgBouncer due to SCRAM auth issue)
+      - DATABASE_URL=postgresql+asyncpg://admin:password@postgres:5432/flowviz
       - REDIS_URL=redis://valkey:6379/0
       - SECRET_KEY=dev-secret-key-change-in-production-min-32-chars
       - JWT_ALGORITHM=HS256
@@ -82,7 +82,7 @@ services:
       - ENVIRONMENT=development
       - DEBUG=true
     depends_on:
-      pgbouncer:
+      postgres:
         condition: service_healthy
       valkey:
         condition: service_healthy
@@ -96,8 +96,8 @@ services:
     container_name: flowviz_celery
     command: celery -A app.tasks worker --loglevel=info
     environment:
-      # Point to PgBouncer instead of direct PostgreSQL
-      - DATABASE_URL=postgresql+asyncpg://admin:password@pgbouncer:5432/flowviz
+      # Connect directly to PostgreSQL (bypassing PgBouncer due to SCRAM auth issue)
+      - DATABASE_URL=postgresql+asyncpg://admin:password@postgres:5432/flowviz
       - REDIS_URL=redis://valkey:6379/0
       - SECRET_KEY=dev-secret-key-change-in-production-min-32-chars
       - CELERY_BROKER_URL=redis://valkey:6379/0
