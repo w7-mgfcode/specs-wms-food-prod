@@ -7,6 +7,9 @@
 import { createHashRouter, Navigate, Outlet } from 'react-router-dom';
 import { AppShell } from './components/shell/AppShell';
 import { FlowVizV1 } from './pages/FlowVizV1';
+import { FlowVizV2 } from './pages/FlowVizV2';
+import { FlowVizV3 } from './pages/FlowVizV3';
+import { FirstFlowPage } from './components/flow/FirstFlowPage';
 import { Presentation } from './pages/Presentation';
 import { Login } from './pages/Login';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -99,6 +102,11 @@ export const router = createHashRouter([
 
                     // Presentation
                     { path: '/presentation', element: <Presentation /> },
+
+                    // OLD section routes - use LEGACY components for comparison
+                    { path: '/old/command', element: <FlowVizV2 /> },
+                    { path: '/old/validator', element: <FlowVizV3 /> },
+                    { path: '/old/first-flow', element: <FirstFlowPage /> },
                 ],
             },
         ],
