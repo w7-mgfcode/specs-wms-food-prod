@@ -154,8 +154,10 @@ class FlowDefinitionListItem(BaseModel):
     created_at: datetime
     updated_at: datetime
     latest_version_num: int | None = None
-    latest_status: FlowVersionStatus | None = None
+    latest_version_status: FlowVersionStatus | None = None
+    published_version_num: int | None = None
     version_count: int = 0
+    created_by_name: str | None = None
 
 
 class FlowVersionResponse(BaseModel):

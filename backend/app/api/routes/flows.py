@@ -55,14 +55,22 @@ async def list_flow_definitions(
         version_info = version_result.one()
 
         # Get latest version status
-        latest_status = None
+        latest_version_status = None
         if version_info.latest_version_num:
             latest_stmt = select(FlowVersion.status).where(
                 FlowVersion.flow_definition_id == defn.id,
                 FlowVersion.version_num == version_info.latest_version_num,
             )
             latest_result = await db.execute(latest_stmt)
-            latest_status = latest_result.scalar_one_or_none()
+            latest_version_status = latest_result.scalar_one_or_none()
+
+        # Get published version number (highest PUBLISHED version)
+        published_stmt = select(func.max(FlowVersion.version_num)).where(
+            FlowVersion.flow_definition_id == defn.id,
+            FlowVersion.status == FlowVersionStatus.PUBLISHED,
+        )
+        published_result = await db.execute(published_stmt)
+        published_version_num = published_result.scalar_one_or_none()
 
         items.append(
             FlowDefinitionListItem(
@@ -72,8 +80,10 @@ async def list_flow_definitions(
                 created_at=defn.created_at,
                 updated_at=defn.updated_at,
                 latest_version_num=version_info.latest_version_num,
-                latest_status=latest_status,
+                latest_version_status=latest_version_status,
+                published_version_num=published_version_num,
                 version_count=version_info.version_count or 0,
+                created_by_name=None,  # TODO: Join with users table if needed
             )
         )
 

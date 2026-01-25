@@ -5,6 +5,7 @@
  */
 
 import { apiFetch } from './client';
+import { generateUUID } from '../uuid';
 
 // --- Types ---
 
@@ -112,7 +113,7 @@ export async function getRunBuffers(runId: string): Promise<RunBufferInventory[]
  * Create a new production run
  */
 export async function createRun(data: CreateRunRequest): Promise<ProductionRun> {
-    const idempotencyKey = crypto.randomUUID();
+    const idempotencyKey = generateUUID();
     return apiFetch<ProductionRun>('/api/runs', {
         method: 'POST',
         headers: {
