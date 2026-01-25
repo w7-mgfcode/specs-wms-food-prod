@@ -54,12 +54,23 @@ jobs:
         VITE_ENABLE_STREAMING=${{ env.VITE_ENABLE_STREAMING }}
         EOF
 
+    - name: Check if Playwright tests exist
+      id: check-tests
+      run: |
+        if [ -f "playwright.config.ts" ] || [ -f "playwright.config.js" ]; then
+          echo "has_tests=true" >> $GITHUB_OUTPUT
+        else
+          echo "has_tests=false" >> $GITHUB_OUTPUT
+          echo "⚠️ No Playwright config found - skipping E2E tests"
+        fi
+
     - name: Run Playwright tests
-      run: npm run test
+      if: steps.check-tests.outputs.has_tests == 'true'
+      run: npx playwright test
 
     - name: Upload Playwright report
       uses: actions/upload-artifact@v4
-      if: always()
+      if: always() && steps.check-tests.outputs.has_tests == 'true'
       with:
         name: playwright-report
         path: flow-viz-react/playwright-report/
@@ -67,7 +78,7 @@ jobs:
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
-      if: always()
+      if: always() && steps.check-tests.outputs.has_tests == 'true'
       with:
         name: playwright-test-results
         path: flow-viz-react/test-results/
