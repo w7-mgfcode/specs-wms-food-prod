@@ -42,13 +42,13 @@ def upgrade() -> None:
         $$ LANGUAGE plpgsql;
     """)
 
-    # Create trigger
+    # Create trigger (separate statements for asyncpg compatibility)
+    op.execute("DROP TRIGGER IF EXISTS trg_flow_version_immutable ON flow_versions")
     op.execute("""
-        DROP TRIGGER IF EXISTS trg_flow_version_immutable ON flow_versions;
         CREATE TRIGGER trg_flow_version_immutable
         BEFORE UPDATE ON flow_versions
         FOR EACH ROW
-        EXECUTE FUNCTION prevent_published_flow_version_modification();
+        EXECUTE FUNCTION prevent_published_flow_version_modification()
     """)
 
 

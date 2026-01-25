@@ -49,13 +49,13 @@ def upgrade() -> None:
         $$ LANGUAGE plpgsql;
     """)
 
-    # Create trigger on inventory_items
+    # Create trigger on inventory_items (separate statements for asyncpg)
+    op.execute("DROP TRIGGER IF EXISTS trg_inventory_buffer_purity ON inventory_items")
     op.execute("""
-        DROP TRIGGER IF EXISTS trg_inventory_buffer_purity ON inventory_items;
         CREATE TRIGGER trg_inventory_buffer_purity
         BEFORE INSERT ON inventory_items
         FOR EACH ROW
-        EXECUTE FUNCTION validate_buffer_lot_type();
+        EXECUTE FUNCTION validate_buffer_lot_type()
     """)
 
 

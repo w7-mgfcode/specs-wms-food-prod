@@ -32,20 +32,20 @@ def upgrade() -> None:
         $$ LANGUAGE plpgsql;
     """)
 
-    # Trigger to prevent UPDATE on audit_events
+    # Trigger to prevent UPDATE on audit_events (separate for asyncpg)
+    op.execute("DROP TRIGGER IF EXISTS trg_audit_no_update ON audit_events")
     op.execute("""
-        DROP TRIGGER IF EXISTS trg_audit_no_update ON audit_events;
         CREATE TRIGGER trg_audit_no_update
         BEFORE UPDATE ON audit_events
-        FOR EACH ROW EXECUTE FUNCTION prevent_audit_modification();
+        FOR EACH ROW EXECUTE FUNCTION prevent_audit_modification()
     """)
 
-    # Trigger to prevent DELETE on audit_events
+    # Trigger to prevent DELETE on audit_events (separate for asyncpg)
+    op.execute("DROP TRIGGER IF EXISTS trg_audit_no_delete ON audit_events")
     op.execute("""
-        DROP TRIGGER IF EXISTS trg_audit_no_delete ON audit_events;
         CREATE TRIGGER trg_audit_no_delete
         BEFORE DELETE ON audit_events
-        FOR EACH ROW EXECUTE FUNCTION prevent_audit_modification();
+        FOR EACH ROW EXECUTE FUNCTION prevent_audit_modification()
     """)
 
     # Temperature violation auto-HOLD workflow function
@@ -79,12 +79,12 @@ def upgrade() -> None:
         $$ LANGUAGE plpgsql;
     """)
 
-    # Trigger for temperature violation auto-HOLD
+    # Trigger for temperature violation auto-HOLD (separate for asyncpg)
+    op.execute("DROP TRIGGER IF EXISTS trg_temp_violation_hold ON temperature_logs")
     op.execute("""
-        DROP TRIGGER IF EXISTS trg_temp_violation_hold ON temperature_logs;
         CREATE TRIGGER trg_temp_violation_hold
         AFTER INSERT ON temperature_logs
-        FOR EACH ROW EXECUTE FUNCTION handle_temp_violation();
+        FOR EACH ROW EXECUTE FUNCTION handle_temp_violation()
     """)
 
 
