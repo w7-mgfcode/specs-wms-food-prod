@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import type { Database } from '../types/database.types';
 import type { ScenarioConfig, QCGate as ScenarioQCGate } from '../types/scenario';
+import { generateUUID } from '../lib/uuid';
 
 // We import the static JSON as initial data
 import initialScenarioData from '../../public/scenarios/doner-kft.json';
@@ -140,7 +141,7 @@ export const useProductionStore = create<ProductionState>()(
             },
 
             startProductionRun: async (operatorId) => {
-                const run_id = crypto.randomUUID();
+                const run_id = generateUUID();
                 const run: ProductionRun = {
                     id: run_id,
                     run_code: `PRD-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${run_id.slice(0, 4)}`.toUpperCase(),
@@ -243,7 +244,7 @@ export const useProductionStore = create<ProductionState>()(
                 // 3. Optimistic Local Update
                 const newLot: Lot = {
                     ...newLotData,
-                    id: crypto.randomUUID(), // Local ID, sync logic would overwrite this with real DB ID
+                    id: generateUUID(), // Local ID, sync logic would overwrite this with real DB ID
                     created_at: new Date().toISOString()
                 };
 
@@ -264,7 +265,7 @@ export const useProductionStore = create<ProductionState>()(
                 // 2. Optimistic Update
                 const newDecision: QCDecision = {
                     ...decisionData,
-                    id: crypto.randomUUID(),
+                    id: generateUUID(),
                     decided_at: new Date().toISOString()
                 };
 
@@ -306,7 +307,7 @@ export const useProductionStore = create<ProductionState>()(
 
                 // Create auto-lot entry for log
                 const autoEntry: AutoLotEntry = {
-                    id: crypto.randomUUID(),
+                    id: generateUUID(),
                     lotCode,
                     lotType: config.lotType,
                     weight,

@@ -11,6 +11,7 @@
 
 import { supabase } from './supabase';
 import type { Database } from '../types/database.types';
+import { generateUUID } from './uuid';
 
 type Lot = Database['public']['Tables']['lots']['Row'];
 type LotInsert = Database['public']['Tables']['lots']['Insert'];
@@ -83,12 +84,12 @@ class PostgresAdapter implements DatabaseAdapter {
 class MockAdapter implements DatabaseAdapter {
     async registerLot(lot: LotInsert) {
         console.log('Mock DB: Registered Lot', lot);
-        return { ...lot, id: crypto.randomUUID(), created_at: new Date().toISOString() } as unknown as Lot;
+        return { ...lot, id: generateUUID(), created_at: new Date().toISOString() } as unknown as Lot;
     }
 
     async addQCDecision(decision: QCDecisionInsert) {
         console.log('Mock DB: Recorded Decision', decision);
-        return { ...decision, id: crypto.randomUUID(), decided_at: new Date().toISOString() } as unknown as QCDecision;
+        return { ...decision, id: generateUUID(), decided_at: new Date().toISOString() } as unknown as QCDecision;
     }
 }
 
