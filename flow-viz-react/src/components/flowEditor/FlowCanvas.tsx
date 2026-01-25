@@ -210,7 +210,7 @@ function FlowCanvasComponent({ onDragOver, onDrop }: FlowCanvasProps) {
     const isReadOnly = currentVersion?.status !== 'DRAFT';
 
     return (
-        <div className="flex-1 relative" style={{ minHeight: '500px' }}>
+        <div className="flex-1 relative min-h-0">
             <div className="absolute inset-0">
             <ReactFlow
                 nodes={nodes}

@@ -67,7 +67,7 @@ function PropertiesPanelComponent() {
     // Nothing selected
     if (!selectedNode && !selectedEdge) {
         return (
-            <div className="w-64 bg-[rgba(26,31,58,0.95)] border-l border-white/10 p-4">
+            <div className="w-64 bg-[rgba(26,31,58,0.95)] border-l border-white/10 p-4 overflow-y-auto">
                 <div className="text-sm text-gray-400 text-center">
                     {language === 'hu'
                         ? 'Válassz egy csomópontot vagy élt a szerkesztéshez'
@@ -80,7 +80,7 @@ function PropertiesPanelComponent() {
     // Edge selected
     if (selectedEdge) {
         return (
-            <div className="w-64 bg-[rgba(26,31,58,0.95)] border-l border-white/10">
+            <div className="w-64 bg-[rgba(26,31,58,0.95)] border-l border-white/10 overflow-y-auto">
                 <div className="p-4 border-b border-white/10 flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-white">
                         {language === 'hu' ? 'Él tulajdonságai' : 'Edge Properties'}
@@ -111,7 +111,7 @@ function PropertiesPanelComponent() {
     const color = NODE_COLORS[nodeType] || '#6b7280';
 
     return (
-        <div className="w-64 bg-[rgba(26,31,58,0.95)] border-l border-white/10">
+        <div className="w-64 bg-[rgba(26,31,58,0.95)] border-l border-white/10 overflow-y-auto">
             {/* Header */}
             <div className="p-4 border-b border-white/10">
                 <div className="flex items-center justify-between">
