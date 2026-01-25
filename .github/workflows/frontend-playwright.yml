@@ -57,7 +57,8 @@ jobs:
     - name: Check if Playwright tests exist
       id: check-tests
       run: |
-        if [ -f "playwright.config.ts" ] || [ -f "playwright.config.js" ]; then
+        # Check for all Playwright config extensions (js, ts, mjs, mts, cjs, cts)
+        if ls playwright.config.{js,ts,mjs,mts,cjs,cts} 2>/dev/null | head -1 > /dev/null; then
           echo "has_tests=true" >> $GITHUB_OUTPUT
         else
           echo "has_tests=false" >> $GITHUB_OUTPUT

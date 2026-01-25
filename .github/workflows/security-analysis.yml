@@ -44,9 +44,9 @@ jobs:
 
     - name: Check for high severity issues
       run: |
-        # Validate bandit-backend.json exists
-        if [ ! -f bandit-backend.json ]; then
-          echo "❌ bandit-backend.json not found - Bandit scan failed to produce output"
+        # Validate bandit-backend.json exists and is not empty
+        if [ ! -s bandit-backend.json ]; then
+          echo "❌ bandit-backend.json not found or empty - Bandit scan failed"
           exit 1
         fi
 
