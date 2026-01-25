@@ -34,18 +34,19 @@ jobs:
 
     - name: Run Bandit security scan on Backend
       run: |
-        bandit -r app -f json -o bandit-backend.json
-        bandit -r app -f txt | tee bandit-backend.txt
+        # Bandit exits 1 if it finds ANY issues; we check severity in next step
+        bandit -r app -f json -o bandit-backend.json || true
+        bandit -r app -f txt | tee bandit-backend.txt || true
 
     - name: Generate SARIF output for GitHub
       run: |
-        bandit -r app -f sarif -o bandit-backend.sarif
+        bandit -r app -f sarif -o bandit-backend.sarif || true
 
     - name: Check for high severity issues
       run: |
-        # Validate bandit-backend.json exists
-        if [ ! -f bandit-backend.json ]; then
-          echo "❌ bandit-backend.json not found - Bandit scan failed to produce output"
+        # Validate bandit-backend.json exists and is not empty
+        if [ ! -s bandit-backend.json ]; then
+          echo "❌ bandit-backend.json not found or empty - Bandit scan failed"
           exit 1
         fi
 
