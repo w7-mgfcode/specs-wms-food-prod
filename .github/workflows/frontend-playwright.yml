@@ -57,9 +57,10 @@ jobs:
     - name: Check if Playwright tests exist
       id: check-tests
       run: |
-        # Check for all Playwright config extensions (js, ts, mjs, mts, cjs, cts)
-        if ls playwright.config.{js,ts,mjs,mts,cjs,cts} 2>/dev/null | head -1 > /dev/null; then
+        # Check for any Playwright config file
+        if compgen -G "playwright.config.*" > /dev/null 2>&1; then
           echo "has_tests=true" >> $GITHUB_OUTPUT
+          echo "✅ Found Playwright config - running E2E tests"
         else
           echo "has_tests=false" >> $GITHUB_OUTPUT
           echo "⚠️ No Playwright config found - skipping E2E tests"
