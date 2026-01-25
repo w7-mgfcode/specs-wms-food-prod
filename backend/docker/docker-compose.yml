@@ -107,6 +107,11 @@ services:
       - valkey
     networks:
       - flowviz_net
+    healthcheck:
+      test: ["CMD", "celery", "-A", "app.tasks", "inspect", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # === Observability Stack ===
 
