@@ -14,11 +14,13 @@ import {
     Clock,
     User,
     ChevronRight,
+    Trash2,
+    X,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useUIStore } from '../../stores/useUIStore';
 import { useAuthStore } from '../../stores/useAuthStore';
-import { listFlowDefinitions, type FlowDefinitionListItem } from '../../lib/api/flows';
+import { listFlowDefinitions, deleteFlowDefinition, type FlowDefinitionListItem } from '../../lib/api/flows';
 
 export function FlowCatalogPage() {
     const navigate = useNavigate();
@@ -28,9 +30,13 @@ export function FlowCatalogPage() {
     const [flows, setFlows] = useState<FlowDefinitionListItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<FlowDefinitionListItem | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Can create flows: ADMIN, MANAGER, or OPERATOR
     const canCreate = role === 'ADMIN' || role === 'MANAGER' || role === 'OPERATOR';
+    // Can delete flows: ADMIN or MANAGER only
+    const canDelete = role === 'ADMIN' || role === 'MANAGER';
 
     // Load flows on mount
     useEffect(() => {
@@ -68,6 +74,42 @@ export function FlowCatalogPage() {
         },
         [navigate]
     );
+
+    // Handle delete click (show confirmation)
+    const handleDeleteClick = useCallback(
+        (e: React.MouseEvent, flow: FlowDefinitionListItem) => {
+            e.stopPropagation(); // Prevent card click
+            setDeleteTarget(flow);
+        },
+        []
+    );
+
+    // Handle delete confirmation
+    const handleDeleteConfirm = useCallback(async () => {
+        if (!deleteTarget) return;
+
+        setIsDeleting(true);
+        try {
+            await deleteFlowDefinition(deleteTarget.id);
+            setFlows((prev) => prev.filter((f) => f.id !== deleteTarget.id));
+            setDeleteTarget(null);
+        } catch (err) {
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : language === 'hu'
+                        ? 'Hiba történt a törlés során'
+                        : 'An error occurred while deleting'
+            );
+        } finally {
+            setIsDeleting(false);
+        }
+    }, [deleteTarget, language]);
+
+    // Handle delete cancel
+    const handleDeleteCancel = useCallback(() => {
+        setDeleteTarget(null);
+    }, []);
 
     // Format date
     const formatDate = useCallback(
@@ -185,11 +227,26 @@ export function FlowCatalogPage() {
                                 )}
                             >
                                 {/* Flow name */}
-                                <div className="flex items-start justify-between">
+                                <div className="flex items-start justify-between gap-2">
                                     <h3 className="text-sm font-semibold text-white truncate flex-1">
                                         {flow.name[language]}
                                     </h3>
-                                    <ChevronRight className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                                    <div className="flex items-center gap-1 flex-shrink-0">
+                                        {canDelete && (
+                                            <button
+                                                onClick={(e) => handleDeleteClick(e, flow)}
+                                                className={cn(
+                                                    'p-1 rounded hover:bg-red-500/20',
+                                                    'text-gray-500 hover:text-red-400',
+                                                    'transition-colors'
+                                                )}
+                                                title={language === 'hu' ? 'Törlés' : 'Delete'}
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                        <ChevronRight className="w-4 h-4 text-gray-500" />
+                                    </div>
                                 </div>
 
                                 {/* Version info */}
@@ -250,6 +307,96 @@ export function FlowCatalogPage() {
                     </div>
                 )}
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {deleteTarget && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    {/* Backdrop */}
+                    <div
+                        className="absolute inset-0 bg-black/60"
+                        onClick={handleDeleteCancel}
+                    />
+
+                    {/* Modal */}
+                    <div className="relative bg-[#1a1f3a] border border-white/10 rounded-lg shadow-xl max-w-md w-full mx-4">
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-4 border-b border-white/10">
+                            <h3 className="text-lg font-semibold text-white">
+                                {language === 'hu' ? 'Folyamat törlése' : 'Delete Flow'}
+                            </h3>
+                            <button
+                                onClick={handleDeleteCancel}
+                                className="p-1 hover:bg-white/10 rounded transition-colors"
+                            >
+                                <X className="w-5 h-5 text-gray-400" />
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-4">
+                            <p className="text-gray-300">
+                                {language === 'hu'
+                                    ? 'Biztosan törölni szeretnéd ezt a folyamatot? Ez a művelet nem vonható vissza.'
+                                    : 'Are you sure you want to delete this flow? This action cannot be undone.'}
+                            </p>
+                            <div className="mt-3 p-3 bg-white/5 rounded-lg">
+                                <div className="text-sm font-medium text-white">
+                                    {deleteTarget.name[language]}
+                                </div>
+                                <div className="text-xs text-gray-400 mt-1">
+                                    {deleteTarget.version_count}{' '}
+                                    {language === 'hu' ? 'verzió' : 'version(s)'}
+                                    {deleteTarget.published_version_num && (
+                                        <span className="text-yellow-400 ml-2">
+                                            {language === 'hu'
+                                                ? '• Publikált verzió is törlődik!'
+                                                : '• Published version will be deleted!'}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="flex items-center justify-end gap-3 p-4 border-t border-white/10">
+                            <button
+                                onClick={handleDeleteCancel}
+                                disabled={isDeleting}
+                                className={cn(
+                                    'px-4 py-2 rounded-lg text-sm',
+                                    'bg-white/10 hover:bg-white/15 text-white',
+                                    'transition-colors',
+                                    'disabled:opacity-50'
+                                )}
+                            >
+                                {language === 'hu' ? 'Mégse' : 'Cancel'}
+                            </button>
+                            <button
+                                onClick={handleDeleteConfirm}
+                                disabled={isDeleting}
+                                className={cn(
+                                    'flex items-center gap-2 px-4 py-2 rounded-lg text-sm',
+                                    'bg-red-600 hover:bg-red-700 text-white',
+                                    'transition-colors',
+                                    'disabled:opacity-50'
+                                )}
+                            >
+                                {isDeleting ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        {language === 'hu' ? 'Törlés...' : 'Deleting...'}
+                                    </>
+                                ) : (
+                                    <>
+                                        <Trash2 className="w-4 h-4" />
+                                        {language === 'hu' ? 'Törlés' : 'Delete'}
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
