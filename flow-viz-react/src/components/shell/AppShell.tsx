@@ -10,7 +10,7 @@ export function AppShell({ children }: AppShellProps) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
     return (
-        <div className="min-h-screen flex flex-col overflow-hidden bg-gradient-to-br from-[var(--shell-bg-dark)] to-[var(--shell-bg-medium)]">
+        <div className="min-h-screen flex flex-col bg-gradient-to-br from-[var(--shell-bg-dark)] to-[var(--shell-bg-medium)]">
             <ShellHeader onMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)} />
             <ShellNav isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
 
